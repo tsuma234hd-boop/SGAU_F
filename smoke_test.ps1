@@ -81,6 +81,32 @@ function Invoke-Api {
     }
 }
 
+function Invoke-ApiWithRetry {
+    param(
+        [string]$Method,
+        [string]$Path,
+        $Body = $null,
+        [string]$Token = "",
+        [int]$MaxAttempts = 10,
+        [int]$DelaySeconds = 3,
+        [int[]]$SuccessStatuses = @(200)
+    )
+
+    $last = $null
+    for ($attempt = 1; $attempt -le $MaxAttempts; $attempt++) {
+        $last = Invoke-Api -Method $Method -Path $Path -Body $Body -Token $Token
+        if ($SuccessStatuses -contains [int]$last.Status) {
+            return $last
+        }
+
+        if ($attempt -lt $MaxAttempts) {
+            Start-Sleep -Seconds $DelaySeconds
+        }
+    }
+
+    return $last
+}
+
 function Assert-Status {
     param(
         [string]$Name,
@@ -106,14 +132,20 @@ $health = Invoke-Api -Method "GET" -Path "/health"
 Assert-Status -Name "Health endpoint" -Actual $health.Status -Expected @(200) | Out-Null
 if ($health.Status -eq 200 -and $health.Body -and $health.Body.services) {
     $down = @()
-    for ($attempt = 1; $attempt -le 3; $attempt++) {
+    for ($attempt = 1; $attempt -le 10; $attempt++) {
         $current = if ($attempt -eq 1) { $health } else { Invoke-Api -Method "GET" -Path "/health" }
         if ($current.Status -ne 200 -or -not $current.Body -or -not $current.Body.services) {
+            if ($attempt -lt 10) {
+                Start-Sleep -Seconds 2
+            }
             continue
         }
         $down = @($current.Body.services.PSObject.Properties | Where-Object { $_.Value -eq "down" } | ForEach-Object { $_.Name })
         if ($down.Count -eq 0) {
             break
+        }
+        if ($attempt -lt 10) {
+            Start-Sleep -Seconds 2
         }
     }
 
@@ -125,7 +157,7 @@ if ($health.Status -eq 200 -and $health.Body -and $health.Body.services) {
 }
 
 # 2) Login admin
-$adminLogin = Invoke-Api -Method "POST" -Path "/auth/login" -Body @{ email = $AdminEmail; password = $AdminPassword }
+$adminLogin = Invoke-ApiWithRetry -Method "POST" -Path "/auth/login" -Body @{ email = $AdminEmail; password = $AdminPassword } -MaxAttempts 12 -DelaySeconds 3 -SuccessStatuses @(200)
 $adminOk = Assert-Status -Name "Login admin" -Actual $adminLogin.Status -Expected @(200)
 $adminToken = ""
 if ($adminOk -and $adminLogin.Body) {
@@ -149,7 +181,7 @@ if (-not $adminToken) {
 }
 
 # 3) Login estudiante
-$studentLogin = Invoke-Api -Method "POST" -Path "/auth/login" -Body @{ email = $StudentEmail; password = $StudentPassword }
+$studentLogin = Invoke-ApiWithRetry -Method "POST" -Path "/auth/login" -Body @{ email = $StudentEmail; password = $StudentPassword } -MaxAttempts 12 -DelaySeconds 3 -SuccessStatuses @(200)
 $studentOk = Assert-Status -Name "Login estudiante" -Actual $studentLogin.Status -Expected @(200)
 $studentToken = ""
 $studentId = 0
@@ -193,7 +225,7 @@ if ($studentToken) {
 }
 
 # 4) Login docente + asignaciones
-$teacherLogin = Invoke-Api -Method "POST" -Path "/auth/login" -Body @{ email = $TeacherEmail; password = $TeacherPassword }
+$teacherLogin = Invoke-ApiWithRetry -Method "POST" -Path "/auth/login" -Body @{ email = $TeacherEmail; password = $TeacherPassword } -MaxAttempts 12 -DelaySeconds 3 -SuccessStatuses @(200)
 $teacherOk = Assert-Status -Name "Login docente" -Actual $teacherLogin.Status -Expected @(200)
 $teacherToken = ""
 if ($teacherOk -and $teacherLogin.Body) {
