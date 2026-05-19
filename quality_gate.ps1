@@ -28,9 +28,10 @@ if ($LASTEXITCODE -ne 0) {
     throw "docker compose up fallo"
 }
 
-Write-Host "Esperando health estable del gateway..." -ForegroundColor Cyan
+
+Write-Host "Esperando health estable del gateway... (hasta 60s)" -ForegroundColor Cyan
 $healthy = $false
-for ($i = 1; $i -le 18; $i++) {
+for ($i = 1; $i -le 30; $i++) {
     try {
         $health = Invoke-RestMethod -Method GET -Uri "http://localhost:8002/health" -TimeoutSec 8
         if ($health.gateway -eq "ok") {
@@ -46,6 +47,10 @@ for ($i = 1; $i -le 18; $i++) {
 }
 
 if (-not $healthy) {
+    Write-Host "[DIAGNOSTICO] Estado de contenedores:" -ForegroundColor Yellow
+    docker compose ps
+    Write-Host "[DIAGNOSTICO] Ultimos logs del gateway:" -ForegroundColor Yellow
+    docker compose logs --tail=40 gateway_service
     throw "Health del gateway no estabilizo a tiempo"
 }
 
