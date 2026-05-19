@@ -2,10 +2,10 @@ param(
     [string]$GatewayBase = "http://localhost:8002",
     [string]$AdminEmail = "admin@ucc.edu.co",
     [string]$AdminPassword = "Admin123*",
-    [string]$TeacherEmail = "jaime.torres@ucc.edu.co",
-    [string]$TeacherPassword = "Sistemas2026*",
-    [string]$StudentEmail = "laura.mejia@ucc.edu.co",
-    [string]$StudentPassword = "123"
+    [string]$TeacherEmail = "ci.docente@ucc.edu.co",
+    [string]$TeacherPassword = "DocenteCI2026*",
+    [string]$StudentEmail = "ci.estudiante@ucc.edu.co",
+    [string]$StudentPassword = "EstudianteCI2026*"
 )
 
 $ErrorActionPreference = "Stop"
@@ -125,6 +125,73 @@ function Assert-Status {
     return $ok
 }
 
+function Ensure-StudentLogin {
+    param(
+        [string]$Email,
+        [string]$Password
+    )
+
+    $login = Invoke-ApiWithRetry -Method "POST" -Path "/auth/login" -Body @{ email = $Email; password = $Password } -MaxAttempts 6 -DelaySeconds 2 -SuccessStatuses @(200)
+    if ($login.Status -eq 200) {
+        return $login
+    }
+
+    $registerResp = Invoke-Api -Method "POST" -Path "/auth/register" -Body @{
+        email = $Email
+        password = $Password
+        role = "estudiante"
+        first_name = "Estudiante"
+        last_name = "CI"
+        document_id = "1234567890"
+    }
+
+    if (($registerResp.Status -ne 200) -and ($registerResp.Status -ne 201) -and ($registerResp.Status -ne 409)) {
+        return $login
+    }
+
+    return Invoke-ApiWithRetry -Method "POST" -Path "/auth/login" -Body @{ email = $Email; password = $Password } -MaxAttempts 8 -DelaySeconds 2 -SuccessStatuses @(200)
+}
+
+function Ensure-TeacherLogin {
+    param(
+        [string]$Email,
+        [string]$Password,
+        [string]$AdminToken
+    )
+
+    $login = Invoke-ApiWithRetry -Method "POST" -Path "/auth/login" -Body @{ email = $Email; password = $Password } -MaxAttempts 6 -DelaySeconds 2 -SuccessStatuses @(200)
+    if ($login.Status -eq 200) {
+        return $login
+    }
+
+    $createResp = Invoke-Api -Method "POST" -Path "/auth/create-user" -Token $AdminToken -Body @{
+        email = $Email
+        password = $Password
+        role = "docente"
+        first_name = "Docente"
+        last_name = "CI"
+        document_id = "1234567891"
+    }
+
+    if (($createResp.Status -eq 200 -or $createResp.Status -eq 201) -and $createResp.Body) {
+        $teacherUserId = 0
+        try { $teacherUserId = [int]$createResp.Body.user_id } catch { $teacherUserId = 0 }
+
+        if ($teacherUserId -gt 0) {
+            $null = Invoke-Api -Method "POST" -Path "/academic/api/teachers/" -Token $AdminToken -Body @{
+                user_id = $teacherUserId
+                email = $Email
+                nombres = "Docente"
+                apellidos = "CI"
+                nombre = "Docente CI"
+                document_id = "1234567891"
+            }
+        }
+    }
+
+    return Invoke-ApiWithRetry -Method "POST" -Path "/auth/login" -Body @{ email = $Email; password = $Password } -MaxAttempts 8 -DelaySeconds 2 -SuccessStatuses @(200)
+}
+
 Write-Host "`n=== SGAU Smoke Test (Gateway: $GatewayBase) ===`n" -ForegroundColor Cyan
 
 # 1) Health gateway
@@ -181,7 +248,7 @@ if (-not $adminToken) {
 }
 
 # 3) Login estudiante
-$studentLogin = Invoke-ApiWithRetry -Method "POST" -Path "/auth/login" -Body @{ email = $StudentEmail; password = $StudentPassword } -MaxAttempts 12 -DelaySeconds 3 -SuccessStatuses @(200)
+$studentLogin = Ensure-StudentLogin -Email $StudentEmail -Password $StudentPassword
 $studentOk = Assert-Status -Name "Login estudiante" -Actual $studentLogin.Status -Expected @(200)
 $studentToken = ""
 $studentId = 0
@@ -225,7 +292,7 @@ if ($studentToken) {
 }
 
 # 4) Login docente + asignaciones
-$teacherLogin = Invoke-ApiWithRetry -Method "POST" -Path "/auth/login" -Body @{ email = $TeacherEmail; password = $TeacherPassword } -MaxAttempts 12 -DelaySeconds 3 -SuccessStatuses @(200)
+$teacherLogin = Ensure-TeacherLogin -Email $TeacherEmail -Password $TeacherPassword -AdminToken $adminToken
 $teacherOk = Assert-Status -Name "Login docente" -Actual $teacherLogin.Status -Expected @(200)
 $teacherToken = ""
 if ($teacherOk -and $teacherLogin.Body) {
