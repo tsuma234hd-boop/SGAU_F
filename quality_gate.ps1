@@ -87,14 +87,14 @@ foreach ($cmd in $testCommands) {
 }
 
 Write-Host "Ejecutando smoke_test.ps1..." -ForegroundColor Cyan
-& powershell -ExecutionPolicy Bypass -File ".\\smoke_test.ps1"
+& ".\\smoke_test.ps1"
 if ($LASTEXITCODE -ne 0) {
     throw "Smoke test fallo"
 }
 
 if ($RunExtended) {
     Write-Host "Ejecutando test_roles.ps1 (extendido)..." -ForegroundColor Cyan
-    & powershell -ExecutionPolicy Bypass -File ".\\test_roles.ps1"
+    & ".\\test_roles.ps1"
     if ($LASTEXITCODE -ne 0) {
         throw "test_roles.ps1 fallo"
     }
