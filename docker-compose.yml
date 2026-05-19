@@ -84,7 +84,7 @@ services:
           DATABASE_URL: postgresql://postgres:postgres@academic-db:5432/academicdb
           AUTH_SECRET_KEY: ${AUTH_SECRET_KEY:?AUTH_SECRET_KEY is required}
       
-      command: sh -c "./wait-for-db.sh && uvicorn main:app --host 0.0.0.0 --port 8000"
+      command: sh -c "sh ./wait-for-db.sh && uvicorn main:app --host 0.0.0.0 --port 8000"
 
   enrollment-db:
     image: postgres:15-alpine
@@ -106,7 +106,7 @@ services:
     environment:
       DATABASE_URL: postgresql://postgres:postgres@enrollment-db:5432/enrollmentdb
       AUTH_SECRET_KEY: ${AUTH_SECRET_KEY:?AUTH_SECRET_KEY is required}
-    command: sh -c "./wait-for-db.sh && uvicorn app.main:app --host 0.0.0.0 --port 8000"
+    command: sh -c "sh ./wait-for-db.sh && uvicorn app.main:app --host 0.0.0.0 --port 8000"
 
   grades-db:
     image: postgres:15-alpine
