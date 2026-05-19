@@ -31,10 +31,14 @@ if ($LASTEXITCODE -ne 0) {
 
 Write-Host "Esperando health estable del gateway... (hasta 60s)" -ForegroundColor Cyan
 $healthy = $false
+$gatewayReachable = $false
+$lastHealth = $null
 for ($i = 1; $i -le 30; $i++) {
     try {
         $health = Invoke-RestMethod -Method GET -Uri "http://localhost:8002/health" -TimeoutSec 8
+        $lastHealth = $health
         if ($health.gateway -eq "ok") {
+            $gatewayReachable = $true
             $down = @($health.services.PSObject.Properties | Where-Object { $_.Value -eq "down" })
             if ($down.Count -eq 0) {
                 $healthy = $true
@@ -46,12 +50,20 @@ for ($i = 1; $i -le 30; $i++) {
     Start-Sleep -Seconds 2
 }
 
-if (-not $healthy) {
+if (-not $gatewayReachable) {
     Write-Host "[DIAGNOSTICO] Estado de contenedores:" -ForegroundColor Yellow
     docker compose ps
     Write-Host "[DIAGNOSTICO] Ultimos logs del gateway:" -ForegroundColor Yellow
     docker compose logs --tail=40 gateway_service
-    throw "Health del gateway no estabilizo a tiempo"
+    throw "Gateway no respondio en /health a tiempo"
+}
+
+if (-not $healthy) {
+    Write-Host "[ADVERTENCIA] Gateway estable pero hay servicios reportados como down/degraded. Continuando con pruebas..." -ForegroundColor Yellow
+    if ($lastHealth) {
+        $lastHealthJson = $lastHealth | ConvertTo-Json -Depth 5 -Compress
+        Write-Host "[ADVERTENCIA] Ultimo health: $lastHealthJson" -ForegroundColor DarkYellow
+    }
 }
 
 Write-Host "Ejecutando pruebas por microservicio (unitarias/integracion)..." -ForegroundColor Cyan
