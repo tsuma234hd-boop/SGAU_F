@@ -1,0 +1,42 @@
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: gateway
+    static_configs:
+      - targets: ["gateway_service:8002"]
+
+  - job_name: auth
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["auth-service:8000"]
+
+  - job_name: student
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["student_service:8000"]
+
+  - job_name: academic
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["academic_service:8000"]
+
+  - job_name: enrollment
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["enrollment_service:8000"]
+
+  - job_name: grades
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["grades_service:8000"]
+
+  - job_name: payment
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["payment_service:8000"]
+
+  - job_name: reporting
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["reporting_service:8001"]

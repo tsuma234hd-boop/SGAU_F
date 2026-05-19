@@ -1,0 +1,11 @@
+fastapi
+uvicorn
+sqlalchemy
+psycopg2-binary
+python-dotenv
+requests
+python-jose
+email-validator
+prometheus-fastapi-instrumentator
+pytest
+httpx

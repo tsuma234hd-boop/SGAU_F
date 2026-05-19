@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Academic Offer Service</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            background: white;
+            padding: 30px;
+            border-radius: 10px 10px 0 0;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 0;
+        }
+
+        h1 {
+            color: #333;
+            font-size: 2.5em;
+            text-align: center;
+        }
+
+        .content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .form-section {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .form-section h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #333;
+            font-weight: 500;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 5px rgba(102, 126, 234, 0.3);
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        button:hover {
+            background: #5568d3;
+        }
+
+        button.delete {
+            background: #ef4444;
+            padding: 8px 12px;
+            width: auto;
+            font-size: 0.9em;
+        }
+
+        button.delete:hover {
+            background: #dc2626;
+        }
+
+        .table-section {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            grid-column: 1 / -1;
+        }
+
+        .table-section h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            background: #f3f4f6;
+            padding: 12px;
+            text-align: left;
+            color: #333;
+            font-weight: 600;
+            border-bottom: 2px solid #667eea;
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        tr:hover {
+            background: #f9fafb;
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .alert.success {
+            background: #d1fae5;
+            color: #065f46;
+            border: 1px solid #6ee7b7;
+            display: block;
+        }
+
+        .alert.error {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fca5a5;
+            display: block;
+        }
+
+        .empty-message {
+            text-align: center;
+            color: #999;
+            padding: 30px;
+            font-style: italic;
+        }
+
+        @media (max-width: 768px) {
+            .content {
+                grid-template-columns: 1fr;
+            }
+            
+            h1 {
+                font-size: 1.8em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📚 Academic Offer Service</h1>
+        </header>
+
+        <div class="content">
+            <!-- Crear Curso -->
+            <div class="form-section">
+                <h2>➕ Materias Por Carrera</h2>
+                <div id="courseAlert" class="alert"></div>
+                <div class="form-group">
+                    <label for="courseCareer">Carrera seleccionada:</label>
+                    <select id="courseCareer" required>
+                        <option value="">Cargando carreras...</option>
+                    </select>
+                </div>
+                <form id="courseForm">
+                    <div class="form-group">
+                        <label for="courseCode">Código:</label>
+                        <input type="text" id="courseCode" required placeholder="ej: CS101">
+                    </div>
+                    <div class="form-group">
+                        <label for="courseName">Nombre:</label>
+                        <input type="text" id="courseName" required placeholder="ej: Programación I">
+                    </div>
+                    <div class="form-group">
+                        <label for="courseCredits">Créditos:</label>
+                        <input type="number" id="courseCredits" required min="1" placeholder="ej: 3">
+                    </div>
+                    <div class="form-group">
+                        <label for="courseDay">Día:</label>
+                        <input type="text" id="courseDay" required placeholder="ej: Lunes">
+                    </div>
+                    <div class="form-group">
+                        <label for="courseStart">Hora inicio:</label>
+                        <input type="time" id="courseStart" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="courseEnd">Hora fin:</label>
+                        <input type="time" id="courseEnd" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="courseLocation">Aula:</label>
+                        <input type="text" id="courseLocation" required placeholder="ej: Aula 101">
+                    </div>
+                    <div class="form-group">
+                        <label for="courseSchedule">Horario (opcional):</label>
+                        <input type="text" id="courseSchedule" placeholder="ej: Lun-Mié 10:00-12:00">
+                    </div>
+                    <button type="submit">Crear Materia En La Carrera</button>
+                </form>
+            </div>
+
+            <!-- Crear Docente -->
+            <div class="form-section">
+                <h2>👨‍🏫 Crear Docente</h2>
+                <div id="teacherAlert" class="alert"></div>
+                <form id="teacherForm">
+                    <div class="form-group">
+                        <label for="teacherName">Nombre:</label>
+                        <input type="text" id="teacherName" required placeholder="ej: Dr. Juan Pérez">
+                    </div>
+                    <button type="submit">Crear Docente</button>
+                </form>
+            </div>
+
+            <!-- Lista de Cursos -->
+            <div class="table-section">
+                <h2>📖 Materias De La Carrera Seleccionada</h2>
+                <div id="coursesContainer">
+                    <div class="empty-message">Selecciona una carrera para ver sus materias</div>
+                </div>
+            </div>
+
+            <!-- Lista de Docentes -->
+            <div class="table-section">
+                <h2>👨‍🎓 Docentes Registrados</h2>
+                <div id="teachersContainer">
+                    <div class="empty-message">Cargando docentes...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = window.location.pathname.startsWith('/academic') ? '/academic/api' : '/api';
+        let selectedCareerId = null;
+
+        function showAlert(elementId, type, message) {
+            const alert = document.getElementById(elementId);
+            alert.className = `alert ${type}`;
+            alert.textContent = message;
+            alert.style.display = 'block';
+            setTimeout(() => {
+                alert.style.display = 'none';
+            }, 3000);
+        }
+
+        async function loadCareers() {
+            try {
+                const response = await fetch(`${API_URL}/careers/`);
+                const careers = await response.json();
+                const select = document.getElementById('courseCareer');
+
+                if (!Array.isArray(careers) || careers.length === 0) {
+                    select.innerHTML = '<option value="">No hay carreras disponibles</option>';
+                    selectedCareerId = null;
+                    loadCourses();
+                    return;
+                }
+
+                const previous = selectedCareerId;
+                select.innerHTML = '<option value="">Selecciona una carrera</option>';
+                careers.forEach(career => {
+                    select.innerHTML += `<option value="${career.id}">${career.code} - ${career.name}</option>`;
+                });
+
+                if (previous && careers.some(c => c.id === previous)) {
+                    select.value = String(previous);
+                }
+
+                if (select.value) {
+                    selectedCareerId = parseInt(select.value, 10);
+                } else {
+                    selectedCareerId = null;
+                }
+                loadCourses();
+            } catch (error) {
+                document.getElementById('courseCareer').innerHTML = '<option value="">Error al cargar carreras</option>';
+                selectedCareerId = null;
+                loadCourses();
+            }
+        }
+
+        document.getElementById('courseCareer').addEventListener('change', (e) => {
+            const value = e.target.value;
+            selectedCareerId = value ? parseInt(value, 10) : null;
+            loadCourses();
+        });
+
+        // Crear Curso
+        document.getElementById('courseForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            if (!selectedCareerId) {
+                showAlert('courseAlert', 'error', '✗ Primero selecciona una carrera');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_URL}/courses/`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        code: document.getElementById('courseCode').value,
+                        name: document.getElementById('courseName').value,
+                        credits: parseInt(document.getElementById('courseCredits').value),
+                        day_of_week: document.getElementById('courseDay').value,
+                        start_time: document.getElementById('courseStart').value,
+                        end_time: document.getElementById('courseEnd').value,
+                        location: document.getElementById('courseLocation').value,
+                        schedule: document.getElementById('courseSchedule').value,
+                        career_id: selectedCareerId,
+                        prerequisites: []
+                    })
+                });
+
+                if (response.ok) {
+                    showAlert('courseAlert', 'success', '✓ Materia creada exitosamente');
+                    document.getElementById('courseForm').reset();
+                    loadCourses();
+                } else {
+                    const data = await response.json().catch(() => ({}));
+                    throw new Error(data.detail || 'Error al crear la materia');
+                }
+            } catch (error) {
+                showAlert('courseAlert', 'error', '✗ ' + error.message);
+            }
+        });
+
+        // Crear Docente
+        document.getElementById('teacherForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            try {
+                const response = await fetch(`${API_URL}/teachers/`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name: document.getElementById('teacherName').value
+                    })
+                });
+
+                if (response.ok) {
+                    showAlert('teacherAlert', 'success', '✓ Docente creado exitosamente');
+                    document.getElementById('teacherForm').reset();
+                    loadTeachers();
+                } else {
+                    const data = await response.json().catch(() => ({}));
+                    throw new Error(data.detail || 'Error al crear el docente');
+                }
+            } catch (error) {
+                showAlert('teacherAlert', 'error', '✗ ' + error.message);
+            }
+        });
+
+        // Cargar Cursos
+        async function loadCourses() {
+            const container = document.getElementById('coursesContainer');
+
+            if (!selectedCareerId) {
+                container.innerHTML = '<div class="empty-message">Selecciona una carrera para ver sus materias</div>';
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/courses/?career_id=${selectedCareerId}`);
+                const courses = await response.json();
+
+                if (courses.length === 0) {
+                    container.innerHTML = '<div class="empty-message">Esta carrera no tiene materias registradas</div>';
+                    return;
+                }
+
+                let html = `
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Código</th>
+                                <th>Nombre</th>
+                                <th>Créditos</th>
+                                <th>Horario</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+
+                courses.forEach(course => {
+                    html += `
+                        <tr>
+                            <td>#${course.id}</td>
+                            <td><strong>${course.code}</strong></td>
+                            <td>${course.name}</td>
+                            <td>${course.credits}</td>
+                            <td>${course.schedule}</td>
+                            <td>
+                                <button class="edit" data-id="${course.id}" data-code="${course.code}" data-name="${course.name}" data-credits="${course.credits}" data-schedule="${course.schedule || ''}" style="background:#f59e0b;padding:8px 12px;width:auto;font-size:0.9em;margin-right:8px;">Editar</button>
+                                <button class="delete" data-id="${course.id}">Eliminar</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+
+                html += '</tbody></table>';
+                container.innerHTML = html;
+
+                container.querySelectorAll('button.edit').forEach(btn => {
+                    btn.addEventListener('click', () => editCourse(btn));
+                });
+                container.querySelectorAll('button.delete').forEach(btn => {
+                    btn.addEventListener('click', () => deleteCourse(btn.dataset.id));
+                });
+            } catch (error) {
+                document.getElementById('coursesContainer').innerHTML = 
+                    '<div class="empty-message">Error al cargar materias</div>';
+            }
+        }
+
+        async function editCourse(button) {
+            const courseId = button.dataset.id;
+            const currentCode = button.dataset.code;
+            const currentName = button.dataset.name;
+            const currentCredits = button.dataset.credits;
+            const currentSchedule = button.dataset.schedule;
+
+            const code = prompt('Código de la materia:', currentCode);
+            if (code === null) return;
+            const name = prompt('Nombre de la materia:', currentName);
+            if (name === null) return;
+            const creditsText = prompt('Créditos:', currentCredits);
+            if (creditsText === null) return;
+            const schedule = prompt('Horario:', currentSchedule || '');
+            if (schedule === null) return;
+
+            const credits = parseInt(creditsText, 10);
+            if (Number.isNaN(credits) || credits < 1) {
+                showAlert('courseAlert', 'error', '✗ Los créditos deben ser un número mayor a 0');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/courses/${courseId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        code: code.trim(),
+                        name: name.trim(),
+                        credits,
+                        schedule: schedule.trim(),
+                        career_id: selectedCareerId
+                    })
+                });
+
+                if (!response.ok) {
+                    const data = await response.json().catch(() => ({}));
+                    throw new Error(data.detail || 'Error al editar la materia');
+                }
+
+                showAlert('courseAlert', 'success', '✓ Materia editada correctamente');
+                loadCourses();
+            } catch (error) {
+                showAlert('courseAlert', 'error', '✗ ' + error.message);
+            }
+        }
+
+        async function deleteCourse(courseId) {
+            if (!confirm('¿Seguro que deseas eliminar esta materia?')) return;
+
+            try {
+                const response = await fetch(`${API_URL}/courses/${courseId}`, {
+                    method: 'DELETE'
+                });
+
+                if (!response.ok) {
+                    const data = await response.json().catch(() => ({}));
+                    throw new Error(data.detail || 'Error al eliminar la materia');
+                }
+
+                showAlert('courseAlert', 'success', '✓ Materia eliminada correctamente');
+                loadCourses();
+            } catch (error) {
+                showAlert('courseAlert', 'error', '✗ ' + error.message);
+            }
+        }
+
+        // Cargar Docentes
+        async function loadTeachers() {
+            try {
+                const response = await fetch(`${API_URL}/teachers/`);
+                const teachers = await response.json();
+                const container = document.getElementById('teachersContainer');
+
+                if (teachers.length === 0) {
+                    container.innerHTML = '<div class="empty-message">No hay docentes registrados</div>';
+                    return;
+                }
+
+                let html = `
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Nombre</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+
+                teachers.forEach(teacher => {
+                    html += `
+                        <tr>
+                            <td>#${teacher.id}</td>
+                            <td>${teacher.name}</td>
+                        </tr>
+                    `;
+                });
+
+                html += '</tbody></table>';
+                container.innerHTML = html;
+            } catch (error) {
+                document.getElementById('teachersContainer').innerHTML = 
+                    '<div class="empty-message">Error al cargar docentes</div>';
+            }
+        }
+
+        // Cargar datos al iniciar
+        loadCareers();
+        loadTeachers();
+
+        // Recargar cada 30 segundos
+        setInterval(() => {
+            loadCareers();
+            loadCourses();
+            loadTeachers();
+        }, 30000);
+    </script>
+</body>
+</html>

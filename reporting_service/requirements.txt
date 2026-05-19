@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+requests
+pandas
+python-jose
+reportlab
+prometheus-fastapi-instrumentator
+pytest
+httpx

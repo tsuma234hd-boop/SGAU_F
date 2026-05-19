@@ -1,0 +1,216 @@
+services:
+
+  # ── Base de datos Auth ─────────────────────
+  auth-db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: authdb
+    ports:
+      - "5432:5432"
+    volumes:
+      - auth-db-data:/var/lib/postgresql/data
+
+  # ── Base de datos Student ─────────────────────
+  student-db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: studentdb
+    ports:
+      - "5433:5432"
+    volumes:
+      - student-db-data:/var/lib/postgresql/data
+
+  # ── Auth Service (puerto 8000 interno) ─────────────────────
+  auth-service:
+    build: ./auth-service
+    ports:
+      - "8000:8000"
+    depends_on:
+      - auth-db
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@auth-db:5432/authdb
+      AUTH_SECRET_KEY: ${AUTH_SECRET_KEY:?AUTH_SECRET_KEY is required}
+    
+  # ── Student Service (puerto 8001 externo / 8000 interno) ────────────────────
+  student_service:
+    build: ./student_service
+    ports:
+      - "8001:8000"
+    depends_on:
+      - student-db
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@student-db:5432/studentdb
+      AUTH_SECRET_KEY: ${AUTH_SECRET_KEY:?AUTH_SECRET_KEY is required}
+  
+    
+
+  # ── API Gateway (puerto 8002) ───────────────────────────
+  gateway_service:
+    build: ./gateway_service
+    ports:
+      - "8002:8002"
+    depends_on:
+      - auth-service
+      - student_service
+      - academic_service
+      - enrollment_service
+      - grades_service
+      - payment_service
+      - reporting_service
+
+ # servicio académico (puerto 8003 externo / 8000 interno) ──────────────────
+  academic-db: 
+      image: postgres:15-alpine
+      environment:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: academicdb
+      ports:
+          - "5434:5432"
+      volumes:
+          - academic-db-data:/var/lib/postgresql/data
+
+  academic_service: 
+      build: ./academic_offer_service
+      depends_on:
+          - academic-db
+      ports:
+          - "8003:8000"
+      environment:
+          DATABASE_URL: postgresql://postgres:postgres@academic-db:5432/academicdb
+          AUTH_SECRET_KEY: ${AUTH_SECRET_KEY:?AUTH_SECRET_KEY is required}
+      
+      command: sh -c "./wait-for-db.sh && uvicorn main:app --host 0.0.0.0 --port 8000"
+
+  enrollment-db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: enrollmentdb
+    ports:
+      - "5435:5432"
+    volumes:
+      - enrollment-db-data:/var/lib/postgresql/data
+
+  enrollment_service:
+    build: ./enrollment_service
+    depends_on:
+      - enrollment-db
+    ports:
+      - "8004:8000"
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@enrollment-db:5432/enrollmentdb
+      AUTH_SECRET_KEY: ${AUTH_SECRET_KEY:?AUTH_SECRET_KEY is required}
+    command: sh -c "./wait-for-db.sh && uvicorn app.main:app --host 0.0.0.0 --port 8000"
+
+  grades-db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: gradesdb
+    ports:
+      - "5436:5432"
+    volumes:
+      - grades-db-data:/var/lib/postgresql/data
+
+  grades_service:
+    build: ./grades_service
+    depends_on:
+      - grades-db
+    ports:
+      - "8005:8000"
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@grades-db:5432/gradesdb
+      AUTH_SECRET_KEY: ${AUTH_SECRET_KEY:?AUTH_SECRET_KEY is required}
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000
+
+  payment-db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: paymentdb
+    ports:
+      - "5437:5432"
+    volumes:
+      - payment-db-data:/var/lib/postgresql/data
+
+  payment_service:
+    build:
+      context: ./payment_service
+      dockerfile: Dockerfile
+    depends_on:
+      - payment-db
+    ports:
+      - "8007:8000"
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@payment-db:5432/paymentdb
+      AUTH_SECRET_KEY: ${AUTH_SECRET_KEY:?AUTH_SECRET_KEY is required}
+      JWT_ALGORITHM: HS256
+      AUTH_SERVICE_URL: http://auth-service:8000
+      STUDENT_SERVICE_URL: http://student_service:8000
+      WOMPI_ENV: sandbox
+      WOMPI_BASE_URL: https://sandbox.wompi.co/v1
+      WOMPI_PUBLIC_KEY: ${WOMPI_PUBLIC_KEY:-}
+      WOMPI_PRIVATE_KEY: ${WOMPI_PRIVATE_KEY:-}
+      WOMPI_EVENTS_SECRET: ${WOMPI_EVENTS_SECRET:-}
+      WOMPI_INTEGRITY_SECRET: ${WOMPI_INTEGRITY_SECRET:-}
+      PAYMENT_LINK_REDIRECT_URL: http://localhost:8002/dashboard
+      PAYMENT_EXPIRATION_MINUTES: 30
+      WOMPI_WEBHOOK_TOLERANCE_SECONDS: 600
+      HTTP_TIMEOUT_SECONDS: 10000
+      LOG_LEVEL: INFO
+    command: sh -c "./wait-for-db.sh && uvicorn app.main:app --host 0.0.0.0 --port 8000"
+
+  reporting_service:
+    build: ./reporting_service
+    depends_on:
+      - grades_service
+      - student_service
+      - academic_service
+      - payment_service
+    ports:
+      - "8006:8001"
+    environment:
+      GRADES_SERVICE_URL: http://grades_service:8000
+      STUDENT_SERVICE_URL: http://student_service:8000
+      COURSES_SERVICE_URL: http://academic_service:8000
+      PAYMENT_SERVICE_URL: http://payment_service:8000
+      AUTH_SECRET_KEY: ${AUTH_SECRET_KEY:?AUTH_SECRET_KEY is required}
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8001
+
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    depends_on:
+      - gateway_service
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+    volumes:
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    depends_on:
+      - prometheus
+      
+volumes:
+  auth-db-data:
+  student-db-data:
+  academic-db-data:
+  enrollment-db-data:
+  grades-db-data:
+  payment-db-data:

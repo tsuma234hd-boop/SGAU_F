@@ -1,0 +1,33 @@
+name: SGAU CI/CD
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+jobs:
+  quality-gate:
+    runs-on: ubuntu-latest
+    env:
+      AUTH_SECRET_KEY: ci_temp_secret_change_me
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run quality gate
+        shell: pwsh
+        run: ./quality_gate.ps1
+
+  extended-tests:
+    runs-on: ubuntu-latest
+    needs: quality-gate
+    if: github.event_name == 'push'
+    env:
+      AUTH_SECRET_KEY: ci_temp_secret_change_me
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run quality gate extended
+        shell: pwsh
+        run: ./quality_gate.ps1 -RunExtended
