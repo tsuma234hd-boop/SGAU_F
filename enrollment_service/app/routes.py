@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 import requests
 from sqlalchemy.orm import Session
 from . import crud, schemas
@@ -124,12 +124,45 @@ def create_enrollment(
         raise HTTPException(status_code=503, detail=str(e))
 
 
-@router.get("/", response_model=list[schemas.EnrollmentResponse])
+@router.get("/")
 def list_enrollments(
+    limit: int | None = Query(default=None, ge=1, le=500),
+    offset: int = Query(default=0, ge=0),
+    student_id: int | None = Query(default=None, ge=1),
+    course_id: int | None = Query(default=None, ge=1),
+    status: str | None = Query(default=None),
     user=Depends(require_roles(["admin"])),
     db: Session = Depends(get_db),
 ):
-    return crud.get_enrollments(db)
+    if (
+        limit is None
+        and offset == 0
+        and student_id is None
+        and course_id is None
+        and not status
+    ):
+        return crud.get_enrollments(db)
+
+    items = crud.get_enrollments(
+        db,
+        limit=limit,
+        offset=offset,
+        student_id=student_id,
+        course_id=course_id,
+        status=status,
+    )
+    total = crud.count_enrollments(
+        db,
+        student_id=student_id,
+        course_id=course_id,
+        status=status,
+    )
+    return {
+        "items": items,
+        "total": total,
+        "limit": limit,
+        "offset": offset,
+    }
 
 
 @router.post("/me", response_model=schemas.EnrollmentResponse)
@@ -139,14 +172,62 @@ def create_my_enrollment(
     db: Session = Depends(get_db),
 ):
     course_id = payload.get("course_id")
+    section_id = payload.get("section_id")
     if course_id is None:
         raise HTTPException(status_code=400, detail="course_id es requerido")
 
     my_student_id = resolve_student_id(user)
-    enrollment = schemas.EnrollmentCreate(student_id=my_student_id, course_id=int(course_id))
+    enrollment = schemas.EnrollmentCreate(
+        student_id=my_student_id,
+        course_id=int(course_id),
+        section_id=int(section_id) if section_id is not None else None,
+    )
 
     try:
         return crud.create_enrollment(db, enrollment, user.get("token"))
+    except ValueError as e:
+        raise HTTPException(status_code=409, detail=str(e))
+    except RuntimeError as e:
+        raise HTTPException(status_code=503, detail=str(e))
+
+
+@router.post("/me/batch")
+def create_my_enrollment_batch(
+    payload: dict,
+    user=Depends(require_roles(["estudiante"])),
+    db: Session = Depends(get_db),
+):
+    raw_items = payload.get("items")
+    if not isinstance(raw_items, list) or len(raw_items) == 0:
+        raise HTTPException(status_code=400, detail="items debe ser una lista no vacía")
+    if len(raw_items) > 15:
+        raise HTTPException(status_code=400, detail="Solo puedes matricular hasta 15 materias por solicitud")
+
+    my_student_id = resolve_student_id(user)
+    enrollments: list[schemas.EnrollmentCreate] = []
+
+    for item in raw_items:
+        if not isinstance(item, dict) or item.get("course_id") is None:
+            raise HTTPException(status_code=400, detail="Cada item debe incluir course_id")
+
+        section_id = item.get("section_id")
+        enrollments.append(
+            schemas.EnrollmentCreate(
+                student_id=my_student_id,
+                course_id=int(item["course_id"]),
+                section_id=int(section_id) if section_id is not None else None,
+            )
+        )
+
+    try:
+        created = crud.create_enrollments_atomic(db, enrollments, user.get("token"))
+        return {
+            "created": len(created),
+            "enrollments": [
+                schemas.EnrollmentResponse.model_validate(e, from_attributes=True).model_dump()
+                for e in created
+            ],
+        }
     except ValueError as e:
         raise HTTPException(status_code=409, detail=str(e))
     except RuntimeError as e:

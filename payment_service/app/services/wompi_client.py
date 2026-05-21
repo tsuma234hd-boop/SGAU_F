@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import logging
 import time
+from urllib.parse import urlencode
 from typing import Any
 
 import requests
@@ -83,6 +84,26 @@ class WompiClient:
 
     def get_transactions_by_reference(self, reference: str) -> dict[str, Any]:
         return self._request("GET", f"/transactions?reference={reference}", use_private_key=True)
+
+    def list_transactions(
+        self,
+        *,
+        from_date: str,
+        until_date: str,
+        page: int = 1,
+        page_size: int = 100,
+        payment_link_id: str | None = None,
+    ) -> dict[str, Any]:
+        params: dict[str, Any] = {
+            "from_date": from_date,
+            "until_date": until_date,
+            "page": page,
+            "page_size": page_size,
+        }
+        if payment_link_id:
+            params["payment_link_id"] = payment_link_id
+        query = urlencode(params)
+        return self._request("GET", f"/transactions?{query}", use_private_key=True)
 
     def create_refund(self, transaction_id: str, payload: dict[str, Any]) -> dict[str, Any]:
         return self._request(

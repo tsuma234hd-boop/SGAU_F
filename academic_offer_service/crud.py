@@ -6,7 +6,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-VALID_ROOM_RANGES = [(200, 220), (300, 320), (400, 420), (500, 520)]
+VALID_ROOM_RANGES = [(100, 120), (200, 220), (300, 320), (400, 420), (500, 520)]
 
 
 def _resolve_prerequisites(db: Session, prerequisite_ids: list[int] | None):
@@ -72,7 +72,7 @@ def create_course(db: Session, course: schemas.CourseCreate):
         schedule_text = f"{course.day_of_week} {course.start_time}-{course.end_time} - {course.location}"
 
     if not _is_valid_room(course.location):
-        raise ValueError("El salón debe estar en los rangos: 200-220, 300-320, 400-420 o 500-520")
+        raise ValueError("El salón debe estar en los rangos: 100-120, 200-220, 300-320, 400-420 o 500-520")
 
     conflict = _has_schedule_conflict(db, course.day_of_week, course.start_time, course.end_time, course.location)
     if conflict:
@@ -139,7 +139,7 @@ def update_course(db: Session, course_id: int, course_data: schemas.CourseUpdate
     target_location = update_data.get("location", course.location)
 
     if "location" in update_data and not _is_valid_room(target_location):
-        raise ValueError("El salón debe estar en los rangos: 200-220, 300-320, 400-420 o 500-520")
+        raise ValueError("El salón debe estar en los rangos: 100-120, 200-220, 300-320, 400-420 o 500-520")
 
     conflict = _has_schedule_conflict(db, target_day, target_start, target_end, target_location, ignore_course_id=course_id)
     if conflict:
@@ -427,6 +427,18 @@ def assign_teacher(db: Session, assignment: schemas.AssignmentCreate):
 
 
 # ── Course Sessions (Horario) ──
+def _sessions_overlap(start_time: str, end_time: str, other_start: str, other_end: str) -> bool:
+    start_m = _time_to_minutes(start_time)
+    end_m = _time_to_minutes(end_time)
+    other_start_m = _time_to_minutes(other_start)
+    other_end_m = _time_to_minutes(other_end)
+
+    if None in (start_m, end_m, other_start_m, other_end_m):
+        return False
+
+    return start_m < other_end_m and other_start_m < end_m
+
+
 def _has_session_conflict(
     db: Session,
     day_of_week: str,
@@ -442,22 +454,99 @@ def _has_session_conflict(
     if ignore_id is not None:
         query = query.filter(models.CourseSession.id != ignore_id)
 
-    start_m = _time_to_minutes(start_time)
-    end_m = _time_to_minutes(end_time)
-    if start_m is None or end_m is None:
-        return None
-
     for session in query.all():
-        s = _time_to_minutes(session.start_time)
-        e = _time_to_minutes(session.end_time)
-        if s is None or e is None:
-            continue
-        if start_m < e and s < end_m:
+        if _sessions_overlap(start_time, end_time, session.start_time, session.end_time):
+            return session
+    return None
+
+
+def _has_teacher_conflict(
+    db: Session,
+    teacher_id: int,
+    day_of_week: str,
+    start_time: str,
+    end_time: str,
+) -> models.CourseSession | None:
+    sessions = db.query(models.CourseSession).filter(
+        models.CourseSession.teacher_id == teacher_id,
+        models.CourseSession.day_of_week == day_of_week,
+    ).all()
+
+    for session in sessions:
+        if _sessions_overlap(start_time, end_time, session.start_time, session.end_time):
+            return session
+    return None
+
+
+def _has_section_conflict(
+    db: Session,
+    course_id: int,
+    section: str,
+    day_of_week: str,
+    start_time: str,
+    end_time: str,
+) -> models.CourseSession | None:
+    sessions = db.query(models.CourseSession).filter(
+        models.CourseSession.course_id == course_id,
+        models.CourseSession.section == section,
+        models.CourseSession.day_of_week == day_of_week,
+    ).all()
+
+    for session in sessions:
+        if _sessions_overlap(start_time, end_time, session.start_time, session.end_time):
             return session
     return None
 
 
 def create_session(db: Session, session: schemas.CourseSessionCreate) -> models.CourseSession:
+    course = db.query(models.Course).filter(models.Course.id == session.course_id).first()
+    if not course:
+        raise ValueError("La materia seleccionada no existe")
+
+    if not _is_valid_room(session.classroom):
+        raise ValueError("El salón debe estar en los rangos: 100-120, 200-220, 300-320, 400-420 o 500-520")
+
+    if session.teacher_id is not None:
+        teacher = db.query(models.Teacher).filter(models.Teacher.id == session.teacher_id).first()
+        if not teacher:
+            raise ValueError("El docente seleccionado no existe")
+
+        assignment = db.query(models.Assignment).filter(
+            models.Assignment.course_id == session.course_id,
+            models.Assignment.teacher_id == session.teacher_id,
+        ).first()
+        if not assignment:
+            raise ValueError("El docente seleccionado no está asignado a esta materia")
+
+        teacher_conflict = _has_teacher_conflict(
+            db,
+            session.teacher_id,
+            session.day_of_week,
+            session.start_time,
+            session.end_time,
+        )
+        if teacher_conflict:
+            conflict_course = db.query(models.Course).filter(models.Course.id == teacher_conflict.course_id).first()
+            conflict_code = conflict_course.code if conflict_course else f"curso {teacher_conflict.course_id}"
+            raise ValueError(
+                f"El docente ya tiene una clase en ese horario ({conflict_code}: "
+                f"{teacher_conflict.start_time}-{teacher_conflict.end_time})."
+            )
+
+    if session.section:
+        section_conflict = _has_section_conflict(
+            db,
+            session.course_id,
+            session.section,
+            session.day_of_week,
+            session.start_time,
+            session.end_time,
+        )
+        if section_conflict:
+            raise ValueError(
+                f"La sección {session.section} de {course.code} ya tiene un bloque que se cruza en ese horario."
+            )
+
     conflict = _has_session_conflict(
         db, session.day_of_week, session.start_time, session.end_time, session.classroom
     )

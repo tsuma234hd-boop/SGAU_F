@@ -148,6 +148,7 @@ class Assignment(AssignmentCreate):
 
 class CourseSessionCreate(BaseModel):
     course_id: int
+    teacher_id: int | None = None
     day_of_week: str
     start_time: str
     end_time: str
@@ -160,4 +161,5 @@ class CourseSession(CourseSessionCreate):
     course_code: str | None = None
     course_name: str | None = None
     career_id: int | None = None
+    teacher_name: str | None = None
     model_config = ConfigDict(from_attributes=True)

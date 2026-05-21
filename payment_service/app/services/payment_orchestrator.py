@@ -167,6 +167,34 @@ def refresh_status_from_wompi(db: Session, payment: models.Payment) -> models.Pa
         transaction = response.get("data") or {}
         return crud.apply_transaction_status(db, payment, transaction)
 
+    if payment.wompi_payment_link_id:
+        try:
+            from_date = (payment.created_at - timedelta(days=2)).strftime("%Y-%m-%d")
+            until_date = (datetime.now(timezone.utc) + timedelta(days=1)).strftime("%Y-%m-%d")
+            response = wompi_client.list_transactions(
+                from_date=from_date,
+                until_date=until_date,
+                page=1,
+                page_size=100,
+                payment_link_id=payment.wompi_payment_link_id,
+            )
+            transactions = (response.get("data") or []) if isinstance(response, dict) else []
+            if transactions:
+                # Preferir la transaccion del mismo monto y la mas reciente.
+                matching = [
+                    tx for tx in transactions
+                    if int(tx.get("amount_in_cents") or 0) == int(payment.amount_in_cents or 0)
+                ]
+                pool = matching or transactions
+                latest = sorted(
+                    pool,
+                    key=lambda tx: str(tx.get("finalized_at") or tx.get("created_at") or ""),
+                    reverse=True,
+                )[0]
+                return crud.apply_transaction_status(db, payment, latest)
+        except Exception:
+            logger.exception("No fue posible refrescar por payment_link_id para %s", payment.reference)
+
     response = wompi_client.get_transactions_by_reference(payment.reference)
     transactions = (response.get("data") or []) if isinstance(response, dict) else []
     if transactions:

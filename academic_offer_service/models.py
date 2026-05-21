@@ -70,6 +70,7 @@ class Teacher(Base):
     career_code = Column(String(50), nullable=True, index=True)
 
     assignments = relationship("Assignment", back_populates="teacher")
+    sessions = relationship("CourseSession", back_populates="teacher")
 
 class Assignment(Base):
     __tablename__ = "assignments"
@@ -89,6 +90,7 @@ class CourseSession(Base):
     __tablename__ = "course_sessions"
     id = Column(Integer, primary_key=True, index=True)
     course_id = Column(Integer, ForeignKey("courses.id"))
+    teacher_id = Column(Integer, ForeignKey("teachers.id"), nullable=True)
     day_of_week = Column(String, nullable=False)   # lunes, martes, ...
     start_time = Column(String, nullable=False)    # HH:MM
     end_time = Column(String, nullable=False)      # HH:MM
@@ -97,3 +99,4 @@ class CourseSession(Base):
     modality = Column(String, nullable=True)
 
     course = relationship("Course", back_populates="sessions")
+    teacher = relationship("Teacher", back_populates="sessions")

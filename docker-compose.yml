@@ -106,6 +106,8 @@ services:
     environment:
       DATABASE_URL: postgresql://postgres:postgres@enrollment-db:5432/enrollmentdb
       AUTH_SECRET_KEY: ${AUTH_SECRET_KEY:?AUTH_SECRET_KEY is required}
+      SEMESTER_START_DATE: ${SEMESTER_START_DATE:-2026-02-02}
+      ENROLLMENT_GRACE_DAYS: ${ENROLLMENT_GRACE_DAYS:-14}
     command: sh -c "sh ./wait-for-db.sh && uvicorn app.main:app --host 0.0.0.0 --port 8000"
 
   grades-db:
@@ -213,4 +215,4 @@ volumes:
   academic-db-data:
   enrollment-db-data:
   grades-db-data:
-  payment-db-data:
+  payment-db-data: 

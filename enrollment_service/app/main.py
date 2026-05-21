@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from prometheus_fastapi_instrumentator import Instrumentator
+from sqlalchemy import text
 from .database import engine, Base
 from .routes import router
 
@@ -16,6 +17,11 @@ app.add_middleware(
 )
 
 Base.metadata.create_all(bind=engine)
+
+with engine.connect() as conn:
+    conn.execute(text("ALTER TABLE enrollments ADD COLUMN IF NOT EXISTS section_id INTEGER"))
+    conn.commit()
+
 app.include_router(router)
 
 @app.get("/")

@@ -1,3395 +1,4 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>SGAU — Dashboard</title>
-  <style>
-    :root {
-      --bg: #f0f9ff;
-      --surface: #ffffff;
-      --border: rgba(29, 78, 216, 0.12);
-      --border2: rgba(29, 78, 216, 0.18);
-      --text: #1e293b;
-      --muted: #64748b;
-      --accent: #1D4ED8;
-      --accent2: #3B82F6;
-      --danger: #ef4444;
-      --warn: #f97316;
-      --serif: 'Georgia', serif;
-      --sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-      --mono: 'Menlo', 'Monaco', monospace;
-      --radius: 12px;
-    }
-
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
-    html, body {
-      height: 100%;
-      background: var(--bg);
-      color: var(--text);
-      font-family: var(--sans);
-      line-height: 1.5;
-      scroll-behavior: smooth;
-    }
-
-    header {
-      background: linear-gradient(90deg, rgba(240, 249, 255, 0.98) 0%, rgba(255, 255, 255, 0.95) 100%);
-      border-bottom: 2px solid var(--border);
-      padding: 0 2rem;
-      display: flex;
-      align-items: center;
-      gap: 2rem;
-      height: 60px;
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      box-shadow: 0 2px 8px rgba(29, 78, 216, 0.08);
-    }
-
-    .logo {
-      font-family: var(--serif);
-      font-size: 1.4rem;
-      color: var(--accent);
-      letter-spacing: -.5px;
-    }
-
-    .logo span {
-      color: var(--muted);
-      font-size: .9rem;
-      font-family: var(--sans);
-      font-weight: 300;
-      margin-left: 6px;
-    }
-
-    .status-bar {
-      margin-left: auto;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: var(--muted);
-      transition: background .4s;
-    }
-
-    .dot.ok {
-      background: var(--accent);
-      box-shadow: 0 0 8px var(--accent);
-    }
-
-    .dot.down {
-      background: var(--danger);
-      box-shadow: 0 0 8px var(--danger);
-    }
-
-    .status-label {
-      font-size: .75rem;
-      font-family: var(--mono);
-      color: var(--muted);
-    }
-
-    #token-badge {
-      font-size: .7rem;
-      font-family: var(--mono);
-      background: rgba(29, 78, 216, 0.08);
-      border: 1px solid rgba(29, 78, 216, 0.2);
-      color: var(--accent);
-      border-radius: 20px;
-      padding: 3px 10px;
-      display: none;
-    }
-
-    #token-badge.visible {
-      display: inline-block;
-    }
-
-    #user-badge {
-      font-size: .8rem;
-      font-family: var(--mono);
-      background: rgba(29, 78, 216, 0.14);
-      border: 1px solid rgba(29, 78, 216, 0.35);
-      color: #1e3a8a;
-      border-radius: 20px;
-      padding: 5px 14px;
-      margin-left: auto;
-      display: none;
-      white-space: nowrap;
-      max-width: min(62vw, 440px);
-      overflow: hidden;
-    }
-
-    #user-badge.visible {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .user-badge-name {
-      color: #1e3a8a;
-      font-weight: 700;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-
-    .user-badge-role {
-      color: #334155;
-      opacity: 1;
-      font-size: .72rem;
-      font-weight: 600;
-      flex-shrink: 0;
-    }
-
-    .app {
-      display: grid;
-      grid-template-columns: 220px 1fr;
-      min-height: calc(100vh - 60px);
-      position: relative;
-      z-index: 1;
-    }
-
-    nav {
-      border-right: 2px solid var(--border);
-      padding: 1.5rem 1rem;
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-      overflow-y: auto;
-      background: linear-gradient(180deg, rgba(240, 249, 255, 0.5) 0%, rgba(255, 255, 255, 0.8) 100%);
-    }
-
-    .nav-section {
-      font-size: .65rem;
-      font-family: var(--mono);
-      color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing: 1.5px;
-      padding: 12px 8px 4px;
-      margin-top: 4px;
-    }
-
-    .nav-btn {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 9px 12px;
-      border-radius: var(--radius);
-      border: none;
-      background: transparent;
-      color: var(--muted);
-      cursor: pointer;
-      font-family: var(--sans);
-      font-size: .875rem;
-      transition: all .2s;
-      text-align: left;
-      width: 100%;
-    }
-
-    .nav-btn:hover {
-      background: rgba(59, 130, 246, 0.08);
-      color: var(--accent);
-    }
-
-    .nav-btn.active {
-      background: rgba(29, 78, 216, 0.15);
-      color: var(--accent);
-      border: 1px solid rgba(29, 78, 216, 0.3);
-    }
-
-    .nav-btn .icon {
-      font-size: 1rem;
-      width: 18px;
-      text-align: center;
-    }
-
-    main {
-      padding: 2rem;
-      overflow-y: auto;
-      background: linear-gradient(135deg, rgba(240, 249, 255, 0.8) 0%, rgba(255, 255, 255, 0.6) 100%);
-    }
-
-    .section {
-      display: none;
-      animation: fadeUp .3s ease;
-    }
-
-    .section.active {
-      display: block;
-    }
-
-    /* Las clases de rol NO deben mostrar secciones - solo las hace visible cuando ya están activas */
-    .section.admin-only,
-    .section.student-only,
-    .section.teacher-only {
-      display: none;
-    }
-
-    .section.active.admin-only,
-    .section.active.student-only,
-    .section.active.teacher-only {
-      display: block;
-    }
-
-    @keyframes fadeUp {
-      from {
-        opacity: 0;
-        transform: translateY(8px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
-    .section-title {
-      font-family: var(--serif);
-      font-size: 1.6rem;
-      margin-bottom: .25rem;
-      color: var(--text);
-    }
-
-    .section-subtitle {
-      color: var(--muted);
-      font-size: .85rem;
-      margin-bottom: 1.75rem;
-    }
-
-    .card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 1.5rem;
-      margin-bottom: 1rem;
-    }
-
-    .card-title {
-      font-size: .7rem;
-      font-family: var(--mono);
-      color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      margin-bottom: 1rem;
-    }
-
-    .field {
-      margin-bottom: .875rem;
-    }
-
-    label {
-      display: block;
-      font-size: .78rem;
-      color: var(--muted);
-      margin-bottom: 5px;
-      font-family: var(--mono);
-    }
-
-    input, select {
-      width: 100%;
-      background: var(--bg);
-      border: 1px solid var(--border2);
-      color: var(--text);
-      border-radius: 7px;
-      padding: 9px 12px;
-      font-family: var(--sans);
-      font-size: .875rem;
-      transition: border-color .2s;
-    }
-
-    input:focus, select:focus {
-      outline: none;
-      border-color: var(--accent2);
-      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.15);
-    }
-
-    select option {
-      background: var(--surface);
-      color: var(--text);
-    }
-
-    .row {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: .75rem;
-    }
-
-    .btn {
-      padding: 9px 20px;
-      border-radius: 7px;
-      border: none;
-      font-family: var(--sans);
-      font-size: .875rem;
-      font-weight: 500;
-      cursor: pointer;
-      transition: all .2s;
-    }
-
-    .btn-primary {
-      background: linear-gradient(135deg, #1D4ED8 0%, #3B82F6 100%);
-      color: #ffffff;
-    }
-
-    .btn-primary:hover {
-      background: linear-gradient(135deg, #1E40AF 0%, #1D4ED8 100%);
-      transform: translateY(-1px);
-      box-shadow: 0 5px 20px rgba(29, 78, 216, 0.3);
-    }
-
-    .btn-secondary {
-      background: transparent;
-      color: var(--text);
-      border: 1px solid var(--border2);
-    }
-
-    .btn-secondary:hover {
-      border-color: var(--accent2);
-      color: var(--accent2);
-    }
-
-    .btn-danger {
-      background: transparent;
-      color: var(--danger);
-      border: 1px solid rgba(239, 68, 68, 0.3);
-    }
-
-    .btn-danger:hover {
-      background: rgba(239, 68, 68, 0.1);
-    }
-
-    .btn-sm {
-      padding: 5px 12px;
-      font-size: .78rem;
-    }
-
-    .table-wrap {
-      overflow-x: auto;
-      margin-bottom: 1rem;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: .85rem;
-    }
-
-    thead tr {
-      border-bottom: 1px solid var(--border2);
-    }
-
-    th {
-      text-align: left;
-      padding: 8px 12px;
-      font-size: .68rem;
-      font-family: var(--mono);
-      color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing: 1px;
-    }
-
-    td {
-      padding: 11px 12px;
-      border-bottom: 1px solid var(--border);
-    }
-
-    tbody tr:hover td {
-      background: rgba(240, 249, 255, 0.3);
-    }
-
-    .semester-divider td {
-      background: rgba(29, 78, 216, 0.08);
-      color: var(--accent);
-      font-family: var(--mono);
-      font-size: .75rem;
-      letter-spacing: 1px;
-      text-transform: uppercase;
-      border-bottom: 1px solid rgba(29, 78, 216, 0.18);
-    }
-
-    .prereq-list {
-      font-size: .72rem;
-      color: var(--accent2);
-      line-height: 1.4;
-      max-width: 260px;
-      white-space: normal;
-    }
-
-    .badge {
-      display: inline-block;
-      padding: 2px 10px;
-      border-radius: 20px;
-      font-size: .7rem;
-      font-family: var(--mono);
-    }
-
-    .badge-activo {
-      background: rgba(29, 78, 216, 0.1);
-      color: var(--accent);
-      border: 1px solid rgba(29, 78, 216, 0.2);
-    }
-
-    .badge-inactivo {
-      background: rgba(239, 68, 68, 0.1);
-      color: var(--danger);
-      border: 1px solid rgba(239, 68, 68, 0.2);
-    }
-
-    .empty-state {
-      text-align: center;
-      padding: 3rem;
-      color: var(--muted);
-      font-size: .9rem;
-    }
-
-    .empty-state .big {
-      font-size: 2rem;
-      margin-bottom: .5rem;
-    }
-
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(5, 1fr);
-      gap: 1rem;
-      margin-bottom: 1.5rem;
-    }
-
-    .stat-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 1.25rem;
-    }
-
-    .stat-card .num {
-      font-family: var(--serif);
-      font-size: 2.2rem;
-      color: var(--accent2);
-    }
-
-    .stat-card .label {
-      font-size: .75rem;
-      color: var(--muted);
-      margin-top: 2px;
-    }
-
-    .admin-shell {
-      display: grid;
-      gap: 1rem;
-    }
-
-    .admin-hero {
-      display: grid;
-      grid-template-columns: minmax(0, 1.5fr) minmax(320px, 1fr);
-      gap: 1rem;
-      margin-bottom: 1.5rem;
-    }
-
-    .hero-panel {
-      background:
-        radial-gradient(circle at top right, rgba(59, 130, 246, 0.16), transparent 34%),
-        linear-gradient(135deg, rgba(29, 78, 216, 0.08), rgba(255, 255, 255, 0.6)),
-        var(--surface);
-      border: 1px solid rgba(29, 78, 216, 0.2);
-      border-radius: 18px;
-      padding: 1.5rem;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .hero-kicker {
-      font-size: .72rem;
-      color: var(--accent2);
-      font-family: var(--mono);
-      text-transform: uppercase;
-      letter-spacing: 1.5px;
-      margin-bottom: .8rem;
-    }
-
-    .hero-title {
-      font-family: var(--serif);
-      font-size: 2.15rem;
-      line-height: 1.05;
-      max-width: 9ch;
-      margin-bottom: .75rem;
-    }
-
-    .hero-copy {
-      color: var(--muted);
-      max-width: 56ch;
-      margin-bottom: 1.2rem;
-    }
-
-    .hero-actions {
-      display: flex;
-      flex-wrap: wrap;
-      gap: .75rem;
-    }
-
-    .hero-meta {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: .75rem;
-      margin-top: 1.1rem;
-    }
-
-    .hero-meta .meta-item {
-      background: rgba(240, 249, 255, 0.5);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: .85rem .95rem;
-    }
-
-    .meta-label {
-      font-size: .7rem;
-      font-family: var(--mono);
-      color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing: 1px;
-    }
-
-    .meta-value {
-      margin-top: .35rem;
-      font-size: 1.3rem;
-      color: var(--text);
-      font-family: var(--serif);
-    }
-
-    .pulse-card {
-      display: grid;
-      gap: .75rem;
-      align-content: start;
-    }
-
-    .pulse-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: .8rem .95rem;
-      background: rgba(240, 249, 255, 0.4);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-    }
-
-    .pulse-label {
-      font-size: .82rem;
-      color: var(--muted);
-    }
-
-    .pulse-value {
-      font-family: var(--mono);
-      color: var(--accent);
-      font-size: .8rem;
-    }
-
-    .admin-grid {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 1rem;
-      margin-bottom: 1rem;
-    }
-
-    .quick-card {
-      background: linear-gradient(180deg, rgba(22, 26, 37, 0.96), rgba(13, 15, 20, 0.92));
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 1.15rem;
-      min-height: 170px;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      gap: .9rem;
-    }
-
-    .quick-card .topline {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      color: var(--muted);
-      font-size: .72rem;
-      font-family: var(--mono);
-      text-transform: uppercase;
-      letter-spacing: 1px;
-    }
-
-    .quick-card {
-      background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(240, 249, 255, 0.95));
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 1.15rem;
-      min-height: 170px;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      gap: .9rem;
-    }
-    .quick-card .kpi {
-      font-size: 1.8rem;
-      color: var(--accent2);
-      font-family: var(--serif);
-    }
-
-    .quick-card .btn {
-      width: fit-content;
-    }
-
-    .admin-panels {
-      display: grid;
-      grid-template-columns: 1.2fr .8fr;
-      gap: 1rem;
-    }
-
-    .mini-list {
-      display: grid;
-      gap: .75rem;
-    }
-
-    .mini-item {
-      display: grid;
-      grid-template-columns: auto 1fr auto;
-      gap: .85rem;
-      align-items: center;
-      padding: .85rem .9rem;
-      background: rgba(255, 255, 255, 0.025);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-    }
-
-    .mini-item {
-      display: grid;
-      grid-template-columns: auto 1fr auto;
-      gap: .85rem;
-      align-items: center;
-      padding: .85rem .9rem;
-      background: rgba(240, 249, 255, 0.5);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-    }
-    .mini-title {
-      color: var(--text);
-      font-size: .9rem;
-    }
-
-    .mini-sub {
-      color: var(--muted);
-      font-size: .78rem;
-    }
-
-    .mini-pill {
-      font-family: var(--mono);
-      font-size: .72rem;
-      color: var(--accent2);
-      padding: .3rem .6rem;
-      border-radius: 999px;
-      border: 1px solid rgba(59, 130, 246, 0.22);
-      background: rgba(59, 130, 246, 0.08);
-    }
-
-    .admin-only {
-      display: none;
-    }
-
-    .teacher-only,
-    .student-only {
-      display: none;
-    }
-
-    /* Mostrar elementos de rol SOLO si NO son secciones (las secciones usan .active) */
-    body.role-admin .admin-only:not(.section) {
-      display: block;
-    }
-
-    body.role-docente .teacher-only:not(.section) {
-      display: block;
-    }
-
-    body.role-estudiante .student-only:not(.section) {
-      display: block;
-    }
-
-    /* Secciones con rol: solo visibles cuando tienen .active */
-    body.role-admin .section.admin-only.active,
-    body.role-docente .section.teacher-only.active,
-    body.role-estudiante .section.student-only.active {
-      display: block;
-    }
-
-    body.role-admin .dashboard-generic,
-    body.role-docente .dashboard-generic,
-    body.role-estudiante .dashboard-generic {
-      display: none;
-    }
-
-    /* ── Pestañas de pago ── */
-    .payment-stats-grid {
-      margin-bottom: 1.15rem;
-    }
-
-    .payment-stats-grid .stat-card {
-      border-radius: 16px;
-      border: 1px solid rgba(59, 130, 246, 0.22);
-      background:
-        radial-gradient(circle at top right, rgba(59, 130, 246, 0.12), transparent 42%),
-        linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(239, 246, 255, 0.9));
-      box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
-      transition: transform .18s ease, box-shadow .18s ease;
-    }
-
-    .payment-stats-grid .stat-card:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 14px 26px rgba(15, 23, 42, 0.12);
-    }
-
-    .payment-shell {
-      border-radius: 18px;
-      border: 1px solid rgba(59, 130, 246, 0.22);
-      background:
-        radial-gradient(circle at top left, rgba(59, 130, 246, 0.1), transparent 36%),
-        linear-gradient(180deg, rgba(255,255,255,0.97), rgba(248, 250, 252, 0.94));
-      box-shadow: 0 14px 30px rgba(15, 23, 42, 0.07);
-      padding: 1.3rem;
-    }
-
-    .pay-tab-strip {
-      display: inline-flex;
-      gap: .45rem;
-      padding: .35rem;
-      border-radius: 999px;
-      background: rgba(29, 78, 216, 0.07);
-      border: 1px solid rgba(29, 78, 216, 0.15);
-      margin-bottom: 1.1rem;
-      flex-wrap: wrap;
-    }
-
-    .pay-tab.active {
-      background: rgba(29, 78, 216, 0.16);
-      color: var(--accent);
-      border-color: rgba(29, 78, 216, 0.4);
-      box-shadow: 0 6px 14px rgba(29, 78, 216, 0.17);
-    }
-
-    .pay-tab {
-      border-radius: 999px;
-      font-weight: 600;
-      letter-spacing: .01em;
-    }
-
-    .payment-main-row {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: .8rem;
-    }
-
-    .pay-method-fields {
-      background: rgba(240, 249, 255, 0.58);
-      border: 1px solid rgba(59, 130, 246, 0.16);
-      border-radius: 12px;
-      padding: .9rem;
-      margin-top: .35rem;
-    }
-
-    .payment-actions {
-      display: flex;
-      gap: .75rem;
-      margin-top: 1rem;
-      flex-wrap: wrap;
-      align-items: center;
-      padding-top: .6rem;
-      border-top: 1px dashed rgba(148, 163, 184, 0.45);
-    }
-
-    .payment-history-card {
-      border-radius: 16px;
-      border: 1px solid rgba(148, 163, 184, 0.35);
-      background: linear-gradient(180deg, rgba(255,255,255,.98), rgba(248,250,252,.92));
-    }
-
-    .payment-history-table tbody tr td {
-      transition: background .18s ease;
-    }
-
-    .payment-history-table tbody tr:hover td {
-      background: rgba(219, 234, 254, 0.42);
-    }
-
-    .pay-method-fields {
-      animation: fadeUp .2s ease;
-    }
-
-    .academic-admin-tabs {
-      display: flex;
-      gap: .5rem;
-      flex-wrap: wrap;
-      margin: .25rem 0 .9rem;
-    }
-
-    .academic-admin-tab {
-      border: 1px solid var(--line);
-      background: rgba(255, 255, 255, 0.55);
-      color: var(--text);
-      border-radius: 999px;
-      padding: .45rem .85rem;
-      font-size: .82rem;
-      cursor: pointer;
-    }
-
-    .academic-admin-tab.active {
-      border-color: rgba(29, 78, 216, 0.35);
-      background: rgba(29, 78, 216, 0.12);
-      color: var(--accent);
-    }
-
-    .assignment-detected-career {
-      margin-top: .45rem;
-      margin-bottom: .5rem;
-      font-size: .82rem;
-      color: var(--muted);
-    }
-
-    .student-activities-shell {
-      display: grid;
-      gap: 1rem;
-    }
-
-    .student-activities-summary {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-      gap: .75rem;
-    }
-
-    .student-activities-kpi {
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: .95rem 1rem;
-      background: linear-gradient(180deg, rgba(255,255,255,.92) 0%, rgba(239,246,255,.78) 100%);
-    }
-
-    .student-activities-kpi .kpi-label {
-      font-size: .74rem;
-      color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing: .08em;
-      margin-bottom: .35rem;
-    }
-
-    .student-activities-kpi .kpi-value {
-      font-size: 1.7rem;
-      color: var(--accent);
-      font-weight: 700;
-      line-height: 1;
-    }
-
-    .student-activities-kpi .kpi-sub {
-      margin-top: .35rem;
-      font-size: .78rem;
-      color: var(--muted);
-    }
-
-    .student-activities-filters {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      gap: .75rem;
-      align-items: end;
-    }
-
-    .student-activities-list {
-      display: grid;
-      gap: .9rem;
-    }
-
-    .activity-card {
-      border: 1px solid rgba(148, 163, 184, 0.25);
-      border-radius: 16px;
-      padding: 1rem 1.05rem;
-      background: linear-gradient(180deg, rgba(255,255,255,.96) 0%, rgba(248,250,252,.92) 100%);
-      box-shadow: 0 10px 30px rgba(15, 23, 42, 0.05);
-    }
-
-    .activity-card-head {
-      display: flex;
-      justify-content: space-between;
-      gap: .75rem;
-      align-items: flex-start;
-      margin-bottom: .7rem;
-      flex-wrap: wrap;
-    }
-
-    .activity-card-title {
-      font-size: 1.02rem;
-      font-weight: 700;
-      color: var(--text);
-      margin-bottom: .2rem;
-    }
-
-    .activity-card-course {
-      color: var(--muted);
-      font-size: .83rem;
-    }
-
-    .activity-chip {
-      display: inline-flex;
-      align-items: center;
-      padding: .28rem .65rem;
-      border-radius: 999px;
-      font-size: .73rem;
-      font-weight: 700;
-      letter-spacing: .03em;
-      border: 1px solid transparent;
-      white-space: nowrap;
-    }
-
-    .activity-chip.pending,
-    .activity-chip.upcoming {
-      color: #92400e;
-      background: rgba(245, 158, 11, 0.14);
-      border-color: rgba(245, 158, 11, 0.26);
-    }
-
-    .activity-chip.today {
-      color: #9a3412;
-      background: rgba(249, 115, 22, 0.14);
-      border-color: rgba(249, 115, 22, 0.28);
-    }
-
-    .activity-chip.overdue {
-      color: #b91c1c;
-      background: rgba(239, 68, 68, 0.12);
-      border-color: rgba(239, 68, 68, 0.25);
-    }
-
-    .activity-chip.submitted {
-      color: #1d4ed8;
-      background: rgba(59, 130, 246, 0.12);
-      border-color: rgba(59, 130, 246, 0.24);
-    }
-
-    .activity-chip.graded {
-      color: #166534;
-      background: rgba(34, 197, 94, 0.12);
-      border-color: rgba(34, 197, 94, 0.22);
-    }
-
-    .activity-card-meta {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-      gap: .65rem;
-      margin-bottom: .8rem;
-    }
-
-    .activity-meta-block {
-      background: rgba(248, 250, 252, 0.9);
-      border: 1px solid rgba(148, 163, 184, 0.2);
-      border-radius: 12px;
-      padding: .7rem .8rem;
-    }
-
-    .activity-meta-label {
-      font-size: .7rem;
-      color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing: .08em;
-      margin-bottom: .24rem;
-    }
-
-    .activity-meta-value {
-      font-size: .88rem;
-      color: var(--text);
-      font-weight: 600;
-    }
-
-    .activity-card-note {
-      font-size: .84rem;
-      color: var(--muted);
-      margin-bottom: .75rem;
-      white-space: pre-wrap;
-      line-height: 1.5;
-    }
-
-    .activity-card-actions {
-      display: flex;
-      flex-wrap: wrap;
-      gap: .55rem;
-      align-items: center;
-    }
-
-    .activity-card-feedback {
-      margin-top: .75rem;
-      padding: .8rem .9rem;
-      border-radius: 12px;
-      background: rgba(239, 246, 255, 0.85);
-      border: 1px solid rgba(59, 130, 246, 0.18);
-      color: var(--text);
-      font-size: .86rem;
-    }
-
-    .activity-card-feedback strong {
-      color: var(--accent);
-    }
-
-    .activity-skeleton {
-      height: 180px;
-      border-radius: 16px;
-      background: linear-gradient(90deg, rgba(226,232,240,.7) 0%, rgba(241,245,249,.95) 50%, rgba(226,232,240,.7) 100%);
-      background-size: 200% 100%;
-      animation: activitySkeleton 1.2s ease-in-out infinite;
-      border: 1px solid rgba(148, 163, 184, 0.18);
-    }
-
-    @keyframes activitySkeleton {
-      0% { background-position: 200% 0; }
-      100% { background-position: -200% 0; }
-    }
-
-    .nequi-waiting {
-      display: flex;
-      align-items: center;
-      gap: .75rem;
-      background: rgba(59, 130, 246, 0.1);
-      border: 1px solid rgba(59, 130, 246, 0.3);
-      border-radius: 10px;
-      padding: 1rem 1.25rem;
-      margin-top: 1rem;
-    }
-
-    .nequi-waiting .pulse-dot {
-      width: 12px;
-      height: 12px;
-      border-radius: 50%;
-      background: #3B82F6;
-      animation: nequi-pulse 1.2s ease-in-out infinite;
-      flex-shrink: 0;
-    }
-
-    @keyframes nequi-pulse {
-      0%, 100% { opacity: 1; transform: scale(1); box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4); }
-      50% { opacity: .7; transform: scale(1.15); box-shadow: 0 0 0 8px rgba(59, 130, 246, 0); }
-    }
-
-    .pse-redirect-cta {
-      background: linear-gradient(135deg, rgba(59,130,246,.08), rgba(29,78,216,.05));
-      border: 1px solid rgba(59, 130, 246, 0.2);
-      border-radius: 12px;
-      padding: 1.25rem;
-      margin-top: 1rem;
-      display: flex;
-      flex-direction: column;
-      gap: .75rem;
-    }
-
-    .badge-status-approved { background: rgba(29,78,216,.1); color: var(--accent); border: 1px solid rgba(29,78,216,.2); }
-    .badge-status-pending   { background: rgba(255,165,0,.1); color: var(--warn); border: 1px solid rgba(255,165,0,.2); }
-    .badge-status-rejected  { background: rgba(239,68,68,.1); color: var(--danger); border: 1px solid rgba(239,68,68,.2); }
-
-    @media (max-width: 1100px) {
-      .admin-hero,
-      .admin-panels,
-      .admin-grid,
-      .hero-meta {
-        grid-template-columns: 1fr;
-      }
-
-      .payment-main-row {
-        grid-template-columns: 1fr;
-      }
-    }
-
-    #toast {
-      position: fixed;
-      bottom: 2rem;
-      left: 50%;
-      transform: translateX(-50%) translateY(20px);
-      background: var(--surface);
-      border: 1px solid var(--border2);
-      color: var(--text);
-      padding: 10px 20px;
-      border-radius: 8px;
-      font-size: .85rem;
-      opacity: 0;
-      transition: all .3s;
-      pointer-events: none;
-      z-index: 999;
-    }
-
-    #toast.show {
-      opacity: 1;
-      transform: translateX(-50%) translateY(0);
-    }
-
-    #toast.ok {
-      border-color: rgba(29, 78, 216, 0.4);
-      color: var(--accent);
-    }
-
-    #toast.err {
-      border-color: rgba(239, 68, 68, 0.4);
-      color: var(--danger);
-    }
-
-    .modal-overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(2, 6, 23, 0.58);
-      display: none;
-      align-items: center;
-      justify-content: center;
-      padding: 1rem;
-      z-index: 9999;
-    }
-
-    .modal-box {
-      width: min(920px, 96vw);
-      max-height: 88vh;
-      overflow: auto;
-      background: var(--surface);
-      border: 1px solid var(--border2);
-      border-radius: 14px;
-      box-shadow: 0 24px 64px rgba(2, 6, 23, 0.35);
-      padding: 1rem 1.1rem;
-    }
-
-    .modal-title {
-      font-weight: 700;
-      color: var(--text);
-      margin-bottom: .5rem;
-    }
-
-    .enrollment-inline-sections {
-      margin-top: .75rem;
-      padding: .6rem;
-      border: 1px solid var(--border2);
-      border-radius: 10px;
-      background: rgba(240, 249, 255, 0.55);
-      font-size: .82rem;
-    }
-
-    .enrollment-inline-sections .row {
-      display: grid;
-      grid-template-columns: 1fr 1fr 1fr auto;
-      gap: .45rem;
-      align-items: center;
-      padding: .42rem .3rem;
-      border-bottom: 1px dashed var(--border);
-    }
-
-    .enrollment-inline-sections .row:last-child {
-      border-bottom: none;
-    }
-
-    .enrollment-semester-shell {
-      margin-bottom: 1rem;
-    }
-
-    .enrollment-semester-title {
-      font-family: var(--serif);
-      font-size: 1.22rem;
-      color: #0f172a;
-      margin-bottom: .8rem;
-      letter-spacing: .2px;
-    }
-
-    .enrollment-semester-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
-      gap: .9rem;
-    }
-
-    .enrollment-course-card {
-      padding: .95rem;
-      border: 1px solid rgba(59, 130, 246, 0.2);
-      border-radius: 14px;
-      background:
-        radial-gradient(circle at 100% 0%, rgba(59, 130, 246, 0.08), transparent 35%),
-        linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(248, 250, 252, 0.9));
-      transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease;
-    }
-
-    .enrollment-course-card:hover {
-      transform: translateY(-1px);
-      border-color: rgba(29, 78, 216, 0.35);
-      box-shadow: 0 10px 24px rgba(29, 78, 216, 0.12);
-    }
-
-    .enrollment-course-card.is-selected {
-      border-color: rgba(29, 78, 216, 0.45);
-      box-shadow: 0 12px 26px rgba(29, 78, 216, 0.16);
-    }
-
-    .enrollment-course-card.is-blocked {
-      border-color: rgba(220, 38, 38, 0.32);
-      background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(254, 242, 242, 0.9));
-    }
-
-    .enrollment-course-head {
-      display: flex;
-      justify-content: space-between;
-      gap: .6rem;
-      align-items: flex-start;
-      margin-bottom: .45rem;
-    }
-
-    .enrollment-course-code {
-      font-family: var(--mono);
-      font-size: .84rem;
-      color: var(--accent);
-      letter-spacing: .3px;
-      font-weight: 700;
-    }
-
-    .enrollment-course-name {
-      font-size: 1.03rem;
-      line-height: 1.35;
-      color: #0f172a;
-      margin-bottom: .52rem;
-      font-weight: 600;
-    }
-
-    .enrollment-status {
-      font-size: .73rem;
-      padding: .2rem .52rem;
-      border-radius: 999px;
-      border: 1px solid transparent;
-      white-space: nowrap;
-      font-weight: 700;
-      letter-spacing: .02em;
-    }
-
-    .enrollment-status.available {
-      color: #1d4ed8;
-      background: rgba(59, 130, 246, 0.12);
-      border-color: rgba(59, 130, 246, 0.2);
-    }
-
-    .enrollment-status.selected {
-      color: #1e3a8a;
-      background: rgba(29, 78, 216, 0.14);
-      border-color: rgba(29, 78, 216, 0.25);
-    }
-
-    .enrollment-status.completed {
-      color: #166534;
-      background: rgba(22, 163, 74, 0.15);
-      border-color: rgba(22, 163, 74, 0.22);
-    }
-
-    .enrollment-status.blocked {
-      color: #991b1b;
-      background: rgba(239, 68, 68, 0.14);
-      border-color: rgba(239, 68, 68, 0.24);
-    }
-
-    .enrollment-course-meta {
-      display: flex;
-      gap: .55rem;
-      align-items: center;
-      flex-wrap: wrap;
-      font-size: .79rem;
-      color: var(--muted);
-      margin-bottom: .68rem;
-    }
-
-    .enrollment-prereq {
-      color: #991b1b;
-      background: rgba(239, 68, 68, 0.1);
-      border: 1px solid rgba(239, 68, 68, 0.16);
-      border-radius: 999px;
-      padding: .16rem .42rem;
-      font-size: .72rem;
-    }
-
-    .enrollment-selected-section {
-      font-size: .78rem;
-      color: #1e3a8a;
-      margin-bottom: .62rem;
-      padding: .32rem .5rem;
-      border-radius: 8px;
-      background: rgba(29, 78, 216, 0.08);
-      border: 1px solid rgba(29, 78, 216, 0.16);
-    }
-
-    .enrollment-course-actions {
-      display: flex;
-      gap: .45rem;
-      align-items: center;
-      flex-wrap: wrap;
-    }
-
-    @media (max-width: 720px) {
-      .enrollment-inline-sections .row {
-        grid-template-columns: 1fr;
-      }
-
-      .pay-tab-strip {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        width: 100%;
-      }
-
-      .pay-tab {
-        width: 100%;
-      }
-
-      .payment-actions {
-        flex-direction: column;
-        align-items: stretch;
-      }
-
-      .payment-actions .btn {
-        width: 100%;
-      }
-    }
-
-    /* ── Timetable ── */
-    .timetable-wrap {
-      overflow-x: auto;
-    }
-
-    .timetable {
-      border-collapse: collapse;
-      min-width: 900px;
-      width: 100%;
-      font-size: .78rem;
-    }
-
-    .timetable th {
-      background: rgba(240, 249, 255, 0.8);
-      text-align: center;
-      padding: 8px 6px;
-      border: 1px solid var(--border2);
-      font-family: var(--mono);
-      font-size: .7rem;
-      color: var(--accent2);
-      text-transform: uppercase;
-      letter-spacing: .8px;
-    }
-
-    .timetable td {
-      border: 1px solid var(--border);
-      padding: 0;
-      height: 48px;
-      vertical-align: top;
-      position: relative;
-    }
-
-    .timetable .time-col {
-      background: rgba(240, 249, 255, 0.8);
-      color: var(--muted);
-      font-family: var(--mono);
-      font-size: .68rem;
-      text-align: center;
-      width: 68px;
-      padding: 4px 6px;
-      vertical-align: middle;
-    }
-
-    .tt-block {
-      background: rgba(59, 130, 246, 0.12);
-      border: 1px solid rgba(59, 130, 246, 0.35);
-      border-radius: 5px;
-      padding: 4px 6px;
-      margin: 2px;
-      font-size: .7rem;
-      line-height: 1.35;
-      cursor: default;
-      position: absolute;
-      left: 2px; right: 2px; top: 0;
-      overflow: hidden;
-    }
-
-    /* Bloques del horario personal (sin posición absoluta) */
-    .personal-timetable .tt-block {
-      position: relative;
-      left: auto; right: auto; top: auto;
-      color: #fff;
-      border: none;
-      border-radius: 10px;
-      padding: 8px 10px;
-      margin: 1px;
-      overflow: visible;
-      white-space: normal;
-      word-break: break-word;
-      cursor: pointer;
-      box-shadow: 0 10px 18px rgba(15, 23, 42, 0.14);
-      transition: transform .16s ease, box-shadow .16s ease, filter .16s ease;
-    }
-
-    .personal-timetable .tt-block:hover {
-      transform: translateY(-1px);
-      filter: brightness(1.03);
-      box-shadow: 0 14px 24px rgba(15, 23, 42, 0.18);
-    }
-
-    .personal-timetable .tt-block.conflict {
-      box-shadow: inset 0 0 0 2px rgba(255,255,255,.18), 0 0 0 2px rgba(239, 68, 68, 0.9), 0 10px 22px rgba(127, 29, 29, 0.26);
-    }
-
-    .personal-timetable .tt-block .tt-code {
-      display: inline-flex;
-      align-items: center;
-      margin-bottom: .3rem;
-      padding: .15rem .42rem;
-      border-radius: 999px;
-      font-size: .64rem;
-      font-weight: 700;
-      letter-spacing: .05em;
-      background: rgba(255,255,255,.16);
-      color: rgba(255,255,255,.94);
-    }
-
-    .personal-timetable .tt-block strong {
-      color: #fff;
-      font-size: .86rem;
-      line-height: 1.18;
-      margin-bottom: .2rem;
-    }
-
-    .personal-timetable .tt-block .tt-sub {
-      color: rgba(255,255,255,.8);
-      font-size: .72rem;
-      line-height: 1.35;
-    }
-
-    .personal-timetable .tt-block .tt-meta {
-      display: block;
-      margin-top: .2rem;
-      color: rgba(255,255,255,.92);
-      font-size: .72rem;
-      line-height: 1.35;
-    }
-
-    .personal-timetable .tt-block .tt-meta-secondary {
-      display: block;
-      margin-top: .22rem;
-      color: rgba(255,255,255,.8);
-      font-size: .68rem;
-      line-height: 1.3;
-    }
-
-    .personal-timetable .tt-conflict-flag {
-      position: absolute;
-      top: 8px;
-      right: 8px;
-      display: inline-flex;
-      align-items: center;
-      gap: .25rem;
-      padding: .14rem .38rem;
-      border-radius: 999px;
-      background: rgba(127, 29, 29, 0.28);
-      color: #fff;
-      font-size: .62rem;
-      font-weight: 700;
-      letter-spacing: .04em;
-    }
-
-    .personal-timetable td {
-      vertical-align: top;
-      min-width: 120px;
-    }
-
-    .tt-block strong {
-      display: block;
-      color: var(--accent2);
-      font-size: .72rem;
-    }
-
-    .tt-block .tt-sub {
-      color: var(--muted);
-      font-size: .65rem;
-    }
-
-    .tt-block .tt-del {
-      position: absolute;
-      top: 3px; right: 4px;
-      background: none;
-      border: none;
-      color: var(--danger);
-      cursor: pointer;
-      font-size: .8rem;
-      line-height: 1;
-      padding: 0;
-    }
-
-    .tt-block:hover {
-      background: rgba(59, 130, 246, 0.2);
-    }
-  </style>
-</head>
-<body>
-  <header>
-    <div class="logo">SGAU <span>Sistema de Gestión Académica Universitaria</span></div>
-    <div class="status-bar">
-      <div class="dot" id="dot-auth"></div>
-      <span class="status-label" id="label-auth">auth</span>
-      <div class="dot" id="dot-student" style="margin-left: 8px"></div>
-      <span class="status-label" id="label-student">students</span>
-      <div class="dot" id="dot-academic" style="margin-left: 8px"></div>
-      <span class="status-label" id="label-academic">academic</span>
-      <div class="dot" id="dot-enrollment" style="margin-left: 8px"></div>
-      <span class="status-label" id="label-enrollment">enrollments</span>
-      <div class="dot" id="dot-grades" style="margin-left: 8px"></div>
-      <span class="status-label" id="label-grades">grades</span>
-      <div class="dot" id="dot-reporting" style="margin-left: 8px"></div>
-      <span class="status-label" id="label-reporting">reports</span>
-      <div class="dot" id="dot-payment" style="margin-left: 8px"></div>
-      <span class="status-label" id="label-payment">payments</span>
-      <span id="token-badge">🔑 Token activo</span>
-    </div>
-    <span id="user-badge">👤 Perfil</span>
-  </header>
-
-  <div class="app">
-    <nav>
-      <div class="nav-section">Dashboard</div>
-      <button class="nav-btn active" data-section="dashboard" onclick="goTo('dashboard', this)">
-        <span class="icon">◈</span> Inicio
-      </button>
-      <button id="nav-my-profile" class="nav-btn" data-section="my-profile" onclick="goTo('my-profile', this)">
-        <span class="icon">👤</span> Mi perfil
-      </button>
-
-      <div class="nav-section" id="nav-section-students">Estudiantes</div>
-      <button id="nav-students-list" class="nav-btn" data-section="students" onclick="goTo('students', this)">
-        <span class="icon">≡</span> Listar
-      </button>
-      <button id="nav-create-student" class="nav-btn" data-section="create-student" onclick="goTo('create-student', this)">
-        <span class="icon">＋</span> Crear
-      </button>
-
-      <button id="nav-mis-cursos" class="nav-btn teacher-only" data-section="mis-cursos" onclick="goTo('mis-cursos', this)">
-        <span class="icon">📚</span> Mis cursos
-      </button>
-
-      <div class="nav-section">Academic</div>
-      <button id="nav-careers" class="nav-btn" data-section="careers" onclick="goTo('careers', this)">
-        <span class="icon">🎓</span> Carreras
-      </button>
-      <button id="nav-materias" class="nav-btn" data-section="materias" onclick="goTo('materias', this)">
-        <span class="icon">📚</span> Materias
-      </button>
-      <button id="nav-horario" class="nav-btn" data-section="horario" onclick="goTo('horario', this)">
-        <span class="icon">📅</span> Horario
-      </button>
-      <button id="nav-teachers" class="nav-btn" data-section="teachers" onclick="goTo('teachers', this)">
-        <span class="icon">👩‍🏫</span> Docentes
-      </button>
-      <button id="nav-assignments" class="nav-btn" data-section="assignments" onclick="goTo('assignments', this)">
-        <span class="icon">🧷</span> Asignaciones
-      </button>
-      <button id="nav-enrollments-admin" class="nav-btn" data-section="enrollments-admin" onclick="goTo('enrollments-admin', this)">
-        <span class="icon">📋</span> Matriculaciones
-      </button>
-      <button id="nav-grades" class="nav-btn" data-section="grades" onclick="goTo('grades', this)">
-        <span class="icon">🧾</span> Calificaciones
-      </button>
-      <button id="nav-buzones" class="nav-btn" data-section="buzones" onclick="goTo('buzones', this)">
-        <span class="icon">📬</span> Actividades
-      </button>
-      <button id="nav-comunicaciones" class="nav-btn teacher-only student-only" data-section="comunicaciones" onclick="goTo('comunicaciones', this)">
-        <span class="icon">📢</span> Comunicaciones
-      </button>
-      <button id="nav-my-enrollments" class="nav-btn" data-section="my-enrollments" onclick="goTo('my-enrollments', this)">
-        <span class="icon">📝</span> Materias inscritas
-      </button>
-      <button id="nav-payment" class="nav-btn" data-section="payment" onclick="goTo('payment', this)">
-        <span class="icon">💳</span> Pagos
-      </button>
-      <button id="nav-reports" class="nav-btn" data-section="reports" onclick="goTo('reports', this)">
-        <span class="icon">📈</span> Reportes
-      </button>
-
-      <div class="nav-section" id="nav-section-config">Config</div>
-      <button id="nav-config" class="nav-btn" data-section="config" onclick="goTo('config', this)">
-        <span class="icon">⚙</span> Gateway
-      </button>
-
-      <div class="nav-section">Sesión</div>
-      <button class="nav-btn" onclick="logout()" style="color: var(--danger);">
-        <span class="icon">🚪</span> Cerrar sesión
-      </button>
-    </nav>
-
-    <main>
-      <div id="sec-dashboard" class="section active">
-        <div class="section-title">Panel de Control</div>
-        <div class="section-subtitle" id="dashboard-subtitle">Estado del sistema y accesos rápidos</div>
-
-        <div class="admin-shell admin-only" id="admin-dashboard">
-          <div class="admin-hero">
-            <div class="hero-panel">
-              <div class="hero-kicker">Centro de administración</div>
-              <div class="hero-title">Control institucional en una sola vista</div>
-              <div class="hero-copy">
-                Supervisa la operación, crea oferta académica y entra directo a docentes, matrículas, finanzas y reportes globales.
-              </div>
-              <div class="hero-actions">
-                <button class="btn btn-primary" onclick="goTo('careers', document.getElementById('nav-careers'))">Crear carrera</button>
-                <button class="btn btn-secondary" onclick="goTo('materias', document.getElementById('nav-materias'))">Crear curso</button>
-                <button class="btn btn-secondary" onclick="goTo('teachers', document.getElementById('nav-teachers'))">Crear docente</button>
-                <button class="btn btn-secondary" onclick="goTo('enrollments-admin', document.getElementById('nav-enrollments-admin'))">Gestionar matrículas</button>
-              </div>
-              <div class="hero-meta">
-                <div class="meta-item">
-                  <div class="meta-label">Sesión</div>
-                  <div class="meta-value">Admin</div>
-                </div>
-                <div class="meta-item">
-                  <div class="meta-label">Salud global</div>
-                  <div class="meta-value" id="admin-health-score">—</div>
-                </div>
-              </div>
-            </div>
-
-            <div class="hero-panel pulse-card">
-              <div class="card-title">Pulso del sistema</div>
-              <div class="pulse-row">
-                <span class="pulse-label">Servicios operativos</span>
-                <span class="pulse-value" id="admin-pulse-services">—</span>
-              </div>
-              <div class="pulse-row">
-                <span class="pulse-label">Matrículas activas</span>
-                <span class="pulse-value" id="admin-pulse-enrollments">—</span>
-              </div>
-              <div class="pulse-row">
-                <span class="pulse-label">Docentes creados</span>
-                <span class="pulse-value" id="admin-pulse-teachers">—</span>
-              </div>
-              <div class="pulse-row">
-                <span class="pulse-label">Carreras disponibles</span>
-                <span class="pulse-value" id="admin-pulse-careers">—</span>
-              </div>
-            </div>
-          </div>
-
-          <div class="admin-grid">
-            <div class="quick-card">
-              <div>
-                <div class="topline"><span>Estudiantes</span><span id="admin-students-kpi">—</span></div>
-                <h3>Base estudiantil</h3>
-                <p>Consulta crecimiento del padrón y entra a gestión de perfiles o matrículas.</p>
-              </div>
-              <button class="btn btn-secondary" onclick="goTo('students', document.getElementById('nav-students-list'))">Administrar estudiantes</button>
-            </div>
-
-            <div class="quick-card">
-              <div>
-                <div class="topline"><span>Oferta</span><span id="admin-courses-kpi">—</span></div>
-                <h3>Cursos y carreras</h3>
-                <p>Mantén actualizada la oferta académica y detecta rápidamente vacíos operativos.</p>
-              </div>
-              <button class="btn btn-secondary" onclick="goTo('materias', document.getElementById('nav-materias'))">Ver oferta</button>
-            </div>
-
-            <div class="quick-card">
-              <div>
-                <div class="topline"><span>Finanzas</span><span id="admin-payments-kpi">—</span></div>
-                <h3>Estado financiero</h3>
-                <p>Revisa pagos disponibles y entra al módulo para registrar deudas o consultar saldos.</p>
-              </div>
-              <button class="btn btn-secondary" onclick="goTo('payment', document.getElementById('nav-payment'))">Abrir pagos</button>
-            </div>
-          </div>
-
-          <div class="admin-panels">
-            <div class="card">
-              <div class="card-title">Atajos de operación</div>
-              <div class="mini-list" id="admin-actions-list">
-                <div class="mini-item">
-                  <div class="mini-icon">🎓</div>
-                  <div>
-                    <div class="mini-title">Crear una nueva carrera</div>
-                    <div class="mini-sub">Abre el formulario institucional y registra un programa nuevo.</div>
-                  </div>
-                  <button class="btn btn-secondary btn-sm" onclick="goTo('careers', document.getElementById('nav-careers'))">Abrir</button>
-                </div>
-                <div class="mini-item">
-                  <div class="mini-icon">👩‍🏫</div>
-                  <div>
-                    <div class="mini-title">Dar de alta un docente</div>
-                    <div class="mini-sub">Crea el usuario docente y publícalo en el servicio académico.</div>
-                  </div>
-                  <button class="btn btn-secondary btn-sm" onclick="goTo('teachers', document.getElementById('nav-teachers'))">Abrir</button>
-                </div>
-                <div class="mini-item">
-                  <div class="mini-icon">🪪</div>
-                  <div>
-                    <div class="mini-title">Crear usuarios administrativos</div>
-                    <div class="mini-sub">Registra estudiantes o nuevos administradores desde un único panel.</div>
-                  </div>
-                  <button class="btn btn-secondary btn-sm" onclick="goTo('admin-users', document.getElementById('nav-admin-users'))">Abrir</button>
-                </div>
-                <div class="mini-item">
-                  <div class="mini-icon">📈</div>
-                  <div>
-                    <div class="mini-title">Revisar reportes globales</div>
-                    <div class="mini-sub">Consulta el estado consolidado del ecosistema académico.</div>
-                  </div>
-                  <button class="btn btn-secondary btn-sm" onclick="goTo('reports', document.getElementById('nav-reports'))">Abrir</button>
-                </div>
-              </div>
-            </div>
-
-            <div class="card">
-              <div class="card-title">Resumen operativo</div>
-              <div class="mini-list">
-                <div class="mini-item">
-                  <div class="mini-icon">🧷</div>
-                  <div>
-                    <div class="mini-title">Asignaciones docentes</div>
-                    <div class="mini-sub">Cursos conectados con responsables académicos.</div>
-                  </div>
-                  <div class="mini-pill" id="admin-assignments-kpi">—</div>
-                </div>
-                <div class="mini-item">
-                  <div class="mini-icon">📝</div>
-                  <div>
-                    <div class="mini-title">Registros de notas</div>
-                    <div class="mini-sub">Calificaciones disponibles en el servicio.</div>
-                  </div>
-                  <div class="mini-pill" id="admin-grades-kpi">—</div>
-                </div>
-                <div class="mini-item">
-                  <div class="mini-icon">🌐</div>
-                  <div>
-                    <div class="mini-title">Gateway</div>
-                    <div class="mini-sub">Estado del panel y la orquestación de servicios.</div>
-                  </div>
-                  <div class="mini-pill" id="admin-gateway-kpi">—</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="admin-shell teacher-only" id="teacher-dashboard">
-          <div class="admin-hero">
-            <div class="hero-panel">
-              <div class="hero-kicker">Espacio docente</div>
-              <div class="hero-title">Tus cursos, horarios y seguimiento académico</div>
-              <div class="hero-copy">
-                Entra directo a las materias asignadas, revisa tu ocupación semanal y continúa con la carga de notas sin navegar por módulos irrelevantes.
-              </div>
-              <div class="hero-actions">
-                <button class="btn btn-primary" onclick="goTo('mis-cursos', document.getElementById('nav-mis-cursos'))">Ver mis cursos</button>
-                <button class="btn btn-secondary" onclick="goTo('horario', document.getElementById('nav-horario'))">Ver horario</button>
-                <button class="btn btn-secondary" onclick="goTo('grades', document.getElementById('nav-grades'))">Ir a notas</button>
-              </div>
-              <div class="hero-meta">
-                <div class="meta-item">
-                  <div class="meta-label">Perfil</div>
-                  <div class="meta-value" id="teacher-name">Docente</div>
-                </div>
-                <div class="meta-item">
-                  <div class="meta-label">Salud de servicios</div>
-                  <div class="meta-value" id="teacher-health-score">—</div>
-                </div>
-              </div>
-            </div>
-
-            <div class="hero-panel pulse-card">
-              <div class="card-title">Resumen docente</div>
-              <div class="pulse-row">
-                <span class="pulse-label">Cursos asignados</span>
-                <span class="pulse-value" id="teacher-courses-count">—</span>
-              </div>
-              <div class="pulse-row">
-                <span class="pulse-label">Bloques en horario</span>
-                <span class="pulse-value" id="teacher-schedule-count">—</span>
-              </div>
-              <div class="pulse-row">
-                <span class="pulse-label">Asignaciones activas</span>
-                <span class="pulse-value" id="teacher-assignments-count">—</span>
-              </div>
-              <div class="pulse-row">
-                <span class="pulse-label">Cursos con notas visibles</span>
-                <span class="pulse-value" id="teacher-grade-courses">—</span>
-              </div>
-            </div>
-          </div>
-
-          <div class="admin-grid">
-            <div class="quick-card">
-              <div>
-                <div class="topline"><span>Materias</span><span id="teacher-kpi-courses">—</span></div>
-                <h3>Portafolio asignado</h3>
-                <p>Accede solo a las materias en las que estás oficialmente asignado.</p>
-              </div>
-              <button class="btn btn-secondary" onclick="goTo('mis-cursos', document.getElementById('nav-mis-cursos'))">Abrir cursos</button>
-            </div>
-
-            <div class="quick-card">
-              <div>
-                <div class="topline"><span>Horario</span><span id="teacher-kpi-hours">—</span></div>
-                <h3>Jornada semanal</h3>
-                <p>Consulta tus bloques de clase y verifica ocupación por día y hora.</p>
-              </div>
-              <button class="btn btn-secondary" onclick="goTo('horario', document.getElementById('nav-horario'))">Abrir horario</button>
-            </div>
-
-            <div class="quick-card">
-              <div>
-                <div class="topline"><span>Calificaciones</span><span id="teacher-kpi-grades">—</span></div>
-                <h3>Carga de notas</h3>
-                <p>Usa el servicio de notas únicamente para tus cursos asignados.</p>
-              </div>
-              <button class="btn btn-secondary" onclick="goTo('grades', document.getElementById('nav-grades'))">Abrir módulo</button>
-            </div>
-          </div>
-        </div>
-
-        <div class="admin-shell student-only" id="student-dashboard">
-          <div class="admin-hero">
-            <div class="hero-panel">
-              <div class="hero-kicker">Ruta del estudiante</div>
-              <div class="hero-title">Tu semestre, tus pagos y tus materias</div>
-              <div class="hero-copy">
-                Aquí ves tu avance académico, el estado financiero y los accesos directos para consultar notas, materias y perfil sin salir del inicio.
-              </div>
-              <div class="hero-actions">
-                <button class="btn btn-primary" onclick="goTo('my-profile', document.getElementById('nav-my-profile'))">Ver perfil</button>
-                <button class="btn btn-secondary" onclick="goTo('my-enrollments', document.getElementById('nav-my-enrollments'))">Ver mis materias</button>
-                <button class="btn btn-secondary" onclick="goTo('payment', document.getElementById('nav-payment'))">Ver pagos</button>
-              </div>
-              <div class="hero-meta">
-                <div class="meta-item">
-                  <div class="meta-label">Estudiante</div>
-                  <div class="meta-value" id="student-dashboard-name">Mi perfil</div>
-                </div>
-                <div class="meta-item">
-                  <div class="meta-label">Promedio actual</div>
-                  <div class="meta-value" id="student-dashboard-average">—</div>
-                </div>
-              </div>
-            </div>
-
-            <div class="hero-panel pulse-card">
-              <div class="card-title">Estado personal</div>
-              <div class="pulse-row">
-                <span class="pulse-label">Materias inscritas</span>
-                <span class="pulse-value" id="student-dashboard-courses">—</span>
-              </div>
-              <div class="pulse-row">
-                <span class="pulse-label">Notas registradas</span>
-                <span class="pulse-value" id="student-dashboard-grades">—</span>
-              </div>
-              <div class="pulse-row">
-                <span class="pulse-label">Balance financiero</span>
-                <span class="pulse-value" id="student-dashboard-balance">—</span>
-              </div>
-              <div class="pulse-row">
-                <span class="pulse-label">Estado de cuenta</span>
-                <span class="pulse-value" id="student-dashboard-financial-status">—</span>
-              </div>
-            </div>
-          </div>
-
-          <div class="admin-grid">
-            <div class="quick-card">
-              <div>
-                <div class="topline"><span>Inscripción</span><span id="student-kpi-enrollments">—</span></div>
-                <h3>Materias del semestre</h3>
-                <p>Consulta las materias inscritas y revisa el detalle de tu carga actual.</p>
-              </div>
-              <button class="btn btn-secondary" onclick="goTo('my-enrollments', document.getElementById('nav-my-enrollments'))">Abrir materias</button>
-            </div>
-
-            <div class="quick-card">
-              <div>
-                <div class="topline"><span>Perfil</span><span id="student-kpi-document">—</span></div>
-                <h3>Datos personales</h3>
-                <p>Mantén al día tu información básica y consulta tu programa académico.</p>
-              </div>
-              <button class="btn btn-secondary" onclick="goTo('my-profile', document.getElementById('nav-my-profile'))">Abrir perfil</button>
-            </div>
-
-            <div class="quick-card">
-              <div>
-                <div class="topline"><span>Pagos</span><span id="student-kpi-paid">—</span></div>
-                <h3>Estado financiero</h3>
-                <p>Consulta pagos realizados, deuda total y estado actualizado de tu cuenta.</p>
-              </div>
-              <button class="btn btn-secondary" onclick="goTo('payment', document.getElementById('nav-payment'))">Abrir pagos</button>
-            </div>
-          </div>
-
-          <div class="card" style="margin-top: 1rem">
-            <div class="section-subtitle">Materias inscritas (resumen)</div>
-            <div class="table-wrap">
-              <table>
-                <thead>
-                  <tr><th>Materia</th><th>Horario</th><th>Salón</th><th>Docente</th></tr>
-                </thead>
-                <tbody id="student-dashboard-enrollments-tbody">
-                  <tr><td colspan="4"><div class="empty-state"><div class="big">◌</div>Cargando...</div></td></tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-
-        <div class="dashboard-generic">
-        <div class="stats-grid">
-          <div class="stat-card">
-            <div class="num" id="stat-students">—</div>
-            <div class="label">Estudiantes</div>
-          </div>
-          <div class="stat-card">
-            <div class="num" id="stat-auth" style="color: var(--accent2)">—</div>
-            <div class="label">Auth</div>
-          </div>
-          <div class="stat-card">
-            <div class="num" id="stat-academic" style="color: var(--accent)">—</div>
-            <div class="label">Academic</div>
-          </div>
-          <div class="stat-card">
-            <div class="num" id="stat-enrollment" style="color: var(--accent2)">—</div>
-            <div class="label">Enrollments</div>
-          </div>
-          <div class="stat-card">
-            <div class="num" id="stat-grades" style="color: var(--accent)">—</div>
-            <div class="label">Grades</div>
-          </div>
-          <div class="stat-card">
-            <div class="num" id="stat-payment" style="color: var(--accent)">—</div>
-            <div class="label">Payments</div>
-          </div>
-          <div class="stat-card">
-            <div class="num" id="stat-reports" style="color: var(--accent2)">—</div>
-            <div class="label">Reports</div>
-          </div>
-          <div class="stat-card">
-            <div class="num" id="stat-gw" style="color: var(--warn)">—</div>
-            <div class="label">Gateway</div>
-          </div>
-        </div>
-        <button class="btn btn-primary" onclick="checkHealth()">🔁 Verificar estado</button>
-        </div>
-      </div>
-
-      <div id="sec-students" class="section">
-        <div class="section-title">Estudiantes</div>
-        <button id="btn-create-student" class="btn btn-primary btn-sm" onclick="goTo('create-student', document.querySelector('[data-section=create-student]'))">＋ Crear nuevo</button>
-        <div class="card" style="margin-top: 1rem">
-          <div class="grid grid-2" style="gap:.75rem;margin-bottom:.75rem;">
-            <div class="field" style="margin:0;">
-              <label>Buscar por cédula</label>
-              <input id="students-document-filter" placeholder="Ej: 1067123456" oninput="loadStudents()" />
-            </div>
-            <div class="field" style="margin:0;">
-              <label>Filtrar por carrera</label>
-              <select id="students-career-filter" onchange="loadStudents()">
-                <option value="">Todas las carreras</option>
-              </select>
-            </div>
-          </div>
-          <div class="table-wrap">
-            <table>
-              <thead>
-                <tr><th>ID</th><th>Cédula</th><th>Nombre</th><th>Carrera</th><th>Email</th><th>Estado</th><th>Acciones</th></tr>
-              </thead>
-              <tbody id="students-tbody">
-                <tr><td colspan="7"><div class="empty-state"><div class="big">◌</div>Cargando...</div></td></tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-
-      <div id="sec-admin-users" class="section">
-        <div class="section-title">Gestión de Usuarios</div>
-        <div class="section-subtitle">Crea cuentas de estudiante, docente y nuevas cuentas de administrador.</div>
-
-        <div class="row">
-          <div class="card">
-            <div class="card-title">Crear Estudiante</div>
-            <div class="field">
-              <label>Nombres</label>
-              <input id="admin-student-first-name" placeholder="Juan" />
-            </div>
-            <div class="field">
-              <label>Apellidos</label>
-              <input id="admin-student-last-name" placeholder="Pérez García" />
-            </div>
-            <div class="field">
-              <label>Número de Identidad</label>
-              <input id="admin-student-document-id" placeholder="123456789" />
-            </div>
-            <div class="field">
-              <label>Carrera</label>
-              <select id="admin-student-program">
-                <option value="">Selecciona una carrera</option>
-              </select>
-            </div>
-            <div class="field">
-              <label>Email</label>
-              <input id="admin-student-email" type="email" placeholder="juan@ucc.edu.co" />
-            </div>
-            <div class="field">
-              <label>Contraseña</label>
-              <input id="admin-student-password" type="password" placeholder="Contraseña segura" />
-            </div>
-            <button class="btn btn-primary" onclick="createStudentFromAdminPanel()">Crear estudiante</button>
-          </div>
-
-          <div class="card">
-            <div class="card-title">Crear Administrador</div>
-            <div class="field">
-              <label>Nombres</label>
-              <input id="admin-user-first-name" placeholder="Laura" />
-            </div>
-            <div class="field">
-              <label>Apellidos</label>
-              <input id="admin-user-last-name" placeholder="Martínez" />
-            </div>
-            <div class="field">
-              <label>Número de Identidad</label>
-              <input id="admin-user-document-id" placeholder="987654321" />
-            </div>
-            <div class="field">
-              <label>Email</label>
-              <input id="admin-user-email" type="email" placeholder="admin2@ucc.edu.co" />
-            </div>
-            <div class="field">
-              <label>Contraseña</label>
-              <input id="admin-user-password" type="password" placeholder="Contraseña segura" />
-            </div>
-            <button class="btn btn-primary" onclick="createAdministratorFromAdminPanel()">Crear administrador</button>
-          </div>
-
-          <div class="card">
-            <div class="card-title">Crear Docente</div>
-            <div class="field">
-              <label>Nombres</label>
-              <input id="admin-teacher-first-name" placeholder="Carlos" />
-            </div>
-            <div class="field">
-              <label>Apellidos</label>
-              <input id="admin-teacher-last-name" placeholder="Ramírez" />
-            </div>
-            <div class="field">
-              <label>Número de Identidad</label>
-              <input id="admin-teacher-document-id" placeholder="1020304050" />
-            </div>
-            <div class="field">
-              <label>Carrera (opcional)</label>
-              <select id="admin-teacher-career">
-                <option value="">Sin carrera asignada</option>
-              </select>
-            </div>
-            <div class="field">
-              <label>Email</label>
-              <input id="admin-teacher-email" type="email" placeholder="docente@ucc.edu.co" />
-            </div>
-            <div class="field">
-              <label>Contraseña</label>
-              <input id="admin-teacher-password" type="password" placeholder="Contraseña segura" />
-            </div>
-            <button class="btn btn-primary" onclick="createTeacherFromAdminPanel()">Crear docente</button>
-          </div>
-        </div>
-      </div>
-
-      <div id="sec-create-student" class="section">
-        <div class="section-title">Crear Estudiante</div>
-        <div class="card">
-          <div class="field">
-            <label>Nombres</label>
-            <input id="student-first-name" placeholder="Juan" />
-          </div>
-          <div class="field">
-            <label>Apellidos</label>
-            <input id="student-last-name" placeholder="Pérez García" />
-          </div>
-          <div class="field">
-            <label>Número de Identidad</label>
-            <input id="student-document-id" placeholder="123456789" />
-          </div>
-          <div class="field">
-            <label>Carrera</label>
-            <select id="student-program">
-              <option value="">Selecciona una carrera</option>
-            </select>
-          </div>
-          <div class="field">
-            <label>Email</label>
-            <input id="student-email" type="email" placeholder="juan@ucc.edu.co" />
-          </div>
-          <div class="field">
-            <label>Contraseña</label>
-            <input id="student-password" type="password" placeholder="Contraseña segura" />
-          </div>
-          <button id="btn-submit-create" class="btn btn-primary" onclick="createStudent()">Crear</button>
-          <button class="btn btn-secondary" onclick="goTo('students', document.querySelector('[data-section=students]'))">Cancelar</button>
-        </div>
-      </div>
-
-      <div id="sec-mis-cursos" class="section">
-        <div class="section-title">Mis Cursos</div>
-        <div class="section-subtitle">Cursos asignados a tu perfil docente</div>
-        <div class="card" style="margin-bottom: 1rem">
-          <button class="btn btn-secondary btn-sm" onclick="loadTeacherMisCursos()">🔁 Actualizar</button>
-          <div class="table-wrap" style="margin-top: 1rem">
-            <table>
-              <thead>
-                <tr><th>Código</th><th>Materia</th><th>Estudiantes</th><th>Semestre</th><th>Créditos</th><th>Día</th><th>Horario</th><th>Salón</th></tr>
-              </thead>
-              <tbody id="mis-cursos-tbody">
-                <tr><td colspan="8"><div class="empty-state"><div class="big">◌</div>Cargando...</div></td></tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-      </div>
-
-      <div id="sec-my-enrollments" class="section student-only">
-        <div class="section-title">📚 Matriculación de Materias</div>
-        <div class="section-subtitle">Gestiona tu matriculación por semestre</div>
-        <div style="font-size:.75rem;color:var(--muted);margin-top:-.25rem;margin-bottom:.6rem;">UI matrícula v2 inline</div>
-
-        <!-- Panel con semestres en tabs -->
-        <div class="card">
-          <div style="display:flex;gap:0.5rem;overflow-x:auto;margin-bottom:1rem;padding-bottom:0.5rem;border-bottom:1px solid var(--border);">
-            <button class="btn btn-sm btn-secondary" id="sem-tab-all" onclick="loadEnrollmentSemester('all')" style="white-space:nowrap;">
-              📋 Todo
-            </button>
-            <span id="enrollment-semester-tabs"></span>
-          </div>
-
-          <!-- Cursos por semestre -->
-          <div id="enrollment-content"></div>
-
-          <!-- Carrito de matriculación -->
-          <div style="margin-top:2rem;padding-top:1rem;border-top:1px solid var(--border);">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
-              <div style="font-weight:500;">🛒 Cursos Seleccionados</div>
-              <button class="btn btn-sm btn-secondary" onclick="clearEnrollmentCart()">Limpiar</button>
-            </div>
-            <div id="enrollment-cart" style="background:var(--bg-secondary);padding:1rem;border-radius:6px;max-height:200px;overflow-y:auto;margin-bottom:1rem;">
-              <div style="color:var(--muted);text-align:center;">Sin cursos seleccionados</div>
-            </div>
-            <div style="display:flex;justify-content:space-between;align-items:center;padding:1rem;background:var(--bg-secondary);border-radius:6px;margin-bottom:1rem;">
-              <div>
-                <div style="color:var(--muted);font-size:0.85rem;">Costo total:</div>
-                <div id="enrollment-total-cost" style="font-size:1.3rem;font-weight:600;color:var(--accent);">$0</div>
-              </div>
-              <div style="text-align:right;font-size:0.85rem;color:var(--muted);" id="enrollment-summary"></div>
-            </div>
-            <button class="btn btn-primary" id="enrollment-submit-btn" onclick="submitEnrollment()" style="width:100%;">
-              ✓ Confirmar Matriculación
-            </button>
-            <div id="enrollment-msg" style="margin-top:0.75rem;font-size:0.85rem;"></div>
-          </div>
-        </div>
-
-        <!-- Sección de materias ya inscritas -->
-        <div class="card" style="margin-top:1.5rem;">
-          <div class="section-subtitle" style="margin-bottom:1rem;">✓ Materias Ya Inscritas</div>
-          <div class="table-wrap">
-            <table>
-              <thead>
-                <tr><th>Código</th><th>Nombre</th><th>Semestre</th><th>Créditos</th><th>Sección</th><th>Horario</th><th>Docente</th><th>Estado</th></tr>
-              </thead>
-              <tbody id="enrollments-tbody">
-                <tr><td colspan="8"><div class="empty-state"><div class="big">◌</div>Cargando...</div></td></tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-
-      <div id="sec-my-profile" class="section">
-        <div class="section-title">Mi Perfil</div>
-        <div class="section-subtitle">Información personal</div>
-        <div class="card">
-          <div class="field">
-            <label>Nombre</label>
-            <input id="profile-nombre" placeholder="Juan Pérez" />
-          </div>
-          <div class="field">
-            <label>Apellido</label>
-            <input id="profile-apellido" placeholder="Pérez García" />
-          </div>
-          <div class="field" id="profile-program-field">
-            <label id="profile-program-label">Carrera</label>
-            <select id="profile-program">
-              <option value="">Sin carrera</option>
-            </select>
-          </div>
-          <div class="field" id="profile-password-fields" style="display:none;">
-            <label>Contraseña actual</label>
-            <input id="profile-current-password" type="password" placeholder="Ingresa tu contraseña actual" />
-            <label style="margin-top:.6rem;display:block;">Nueva contraseña</label>
-            <input id="profile-new-password" type="password" placeholder="Mínimo 8 caracteres" />
-            <label style="margin-top:.6rem;display:block;">Confirmar nueva contraseña</label>
-            <input id="profile-confirm-password" type="password" placeholder="Repite la nueva contraseña" />
-          </div>
-          <button class="btn btn-primary" onclick="updateProfile()">Guardar cambios</button>
-        </div>
-      </div>
-
-      <div id="sec-materias" class="section">
-        <div class="section-title">Materias</div>
-        <div class="section-subtitle">Organiza y crea materias por carrera.</div>
-        <div class="academic-admin-tabs admin-only" data-academic-tabs>
-          <button class="academic-admin-tab" data-tab="teachers" onclick="goAcademicAdminTab('teachers')">Docentes</button>
-          <button class="academic-admin-tab" data-tab="courses" onclick="goAcademicAdminTab('courses')">Cursos</button>
-          <button class="academic-admin-tab" data-tab="assignments" onclick="goAcademicAdminTab('assignments')">Asignaciones</button>
-        </div>
-        <div class="card" style="margin-top: 1rem">
-          <div class="field">
-            <label>Filtrar por carrera</label>
-            <select id="materias-career-filter" style="width: 100%;" onchange="loadAcademic()">
-              <option value="">Todas las carreras</option>
-            </select>
-          </div>
-          <div class="field">
-            <label>Filtrar por semestre</label>
-            <select id="materias-semester-filter" style="width: 100%;" onchange="loadAcademic()">
-              <option value="">Todos los semestres</option>
-            </select>
-          </div>
-          <button class="btn btn-primary" onclick="loadAcademic()">Actualizar materias</button>
-          <div class="table-wrap" style="margin-top: 1rem">
-            <table>
-              <thead>
-                <tr><th>ID</th><th>Código</th><th>Nombre</th><th>Semestre</th><th>Créditos</th><th>Prerrequisitos</th><th>Carrera</th><th>Horario</th><th>Cupo</th></tr>
-              </thead>
-              <tbody id="academic-tbody">
-                <tr><td colspan="9"><div class="empty-state"><div class="big">◌</div>Cargando...</div></td></tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        <div class="card" style="margin-top: 1rem">
-          <div class="section-subtitle">Crear materia</div>
-          <div class="field">
-            <label>Carrera</label>
-            <select id="course-career" style="width: 100%;"></select>
-          </div>
-          <div class="field">
-            <label>Código</label>
-            <input id="course-code" placeholder="ISISTEMA 9421ISC-1" />
-          </div>
-          <div class="field">
-            <label>Nombre</label>
-            <input id="course-name" placeholder="Sistemas de Información" />
-          </div>
-          <div class="field">
-            <label>Créditos</label>
-            <input id="course-credits" type="number" min="0" placeholder="3" />
-          </div>
-          <div class="field">
-            <label>Semestre</label>
-            <input id="course-semester" type="number" min="1" max="12" placeholder="1" />
-          </div>
-          <div class="field">
-            <label>Fecha y hora de inicio (calendario)</label>
-            <input id="course-start-datetime" type="datetime-local" />
-          </div>
-          <div class="field">
-            <label>Duración</label>
-            <select id="course-duration" style="width: 100%;">
-              <option value="60">1 hora</option>
-              <option value="120" selected>2 horas</option>
-              <option value="180">3 horas</option>
-            </select>
-          </div>
-          <div class="field">
-            <label>Salón</label>
-            <select id="course-location" style="width: 100%;"></select>
-          </div>
-          <div class="field">
-            <label>Límite de estudiantes <span style="font-weight:400;opacity:.65;">(opcional)</span></label>
-            <input id="course-max-students" type="number" min="1" placeholder="Ej: 30 — dejar vacío para sin límite" />
-          </div>
-          <button class="btn btn-primary" onclick="createCourse()">Crear materia</button>
-        </div>
-      </div>
-
-      <div id="sec-horario" class="section">
-        <div class="section-title">Horario Semanal</div>
-        <div class="section-subtitle admin-only">Visualiza y administra los bloques de clase por salón y hora.</div>
-        <div class="section-subtitle teacher-only student-only">Tu horario semanal de clases.</div>
-
-        <!-- Vista personal: docente y estudiante -->
-        <div class="card teacher-only student-only">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.8rem;">
-            <div class="card-title">📅 Mi horario semanal</div>
-            <button class="btn btn-secondary btn-sm" onclick="loadPersonalSchedule()">🔁 Actualizar</button>
-          </div>
-          <div id="personal-timetable-container">
-            <div class="empty-state"><div class="big">◌</div>Cargando tu horario...</div>
-          </div>
-        </div>
-
-        <!-- Vista admin: filtro y gestión -->
-        <div class="card admin-only">
-          <div class="row">
-            <div class="field">
-              <label>Filtrar por carrera</label>
-              <select id="horario-career-filter" style="width:100%;" onchange="loadSchedule()">
-                <option value="">Todas las carreras</option>
-              </select>
-            </div>
-            <div style="display:flex;align-items:flex-end;padding-bottom:.875rem;">
-              <button class="btn btn-secondary btn-sm" onclick="loadSchedule()">🔁 Actualizar</button>
-            </div>
-          </div>
-          <div class="timetable-wrap" id="timetable-container">
-            <div class="empty-state"><div class="big">◌</div>Selecciona una carrera o actualiza.</div>
-          </div>
-        </div>
-
-        <div class="card admin-only" style="margin-top:1rem;">
-          <div class="card-title">Agregar bloque de clase</div>
-          <div class="row">
-            <div class="field">
-              <label>Carrera</label>
-              <select id="sch-career" style="width:100%;" onchange="loadScheduleCourses(); loadScheduleTeachers()">
-                <option value="">Selecciona carrera</option>
-              </select>
-            </div>
-            <div class="field">
-              <label>Materia</label>
-              <select id="sch-course" style="width:100%;" onchange="loadScheduleTeachers()">
-                <option value="">Selecciona materia</option>
-              </select>
-            </div>
-          </div>
-          <div class="row">
-            <div class="field">
-              <label>Docente</label>
-              <select id="sch-teacher" style="width:100%;">
-                <option value="">Sin docente asignado</option>
-              </select>
-            </div>
-          </div>
-          <div class="row">
-            <div class="field">
-              <label>Día</label>
-              <select id="sch-day" style="width:100%;">
-                <option value="lunes">Lunes</option>
-                <option value="martes">Martes</option>
-                <option value="miercoles">Miércoles</option>
-                <option value="jueves">Jueves</option>
-                <option value="viernes">Viernes</option>
-                <option value="sabado">Sábado</option>
-              </select>
-            </div>
-            <div class="field">
-              <label>Salón</label>
-              <input id="sch-classroom" placeholder="Ej: Aula Informática-510" />
-            </div>
-          </div>
-          <div class="row">
-            <div class="field">
-              <label>Hora inicio (HH:MM)</label>
-              <input id="sch-start" type="time" step="60" />
-            </div>
-            <div class="field">
-              <label>Hora fin (HH:MM)</label>
-              <input id="sch-end" type="time" step="60" />
-            </div>
-          </div>
-          <div class="row">
-            <div class="field">
-              <label>Sección (opcional)</label>
-              <input id="sch-section" placeholder="1" />
-            </div>
-            <div class="field">
-              <label>Modalidad (opcional)</label>
-              <input id="sch-modality" placeholder="Teórico-Práctico" />
-            </div>
-          </div>
-          <button class="btn btn-primary" onclick="createScheduleBlock()">Agregar bloque</button>
-        </div>
-
-      </div>
-
-      <div id="sec-careers" class="section">
-        <div class="section-title">Carreras</div>
-        <div class="card" style="margin-top: 1rem">
-          <button class="btn btn-primary" onclick="loadCareers()">Actualizar carreras</button>
-          <div class="table-wrap" style="margin-top: 1rem">
-            <table>
-              <thead>
-                <tr><th>ID</th><th>Código</th><th>Nombre</th><th>Descripción</th><th>Facultad</th><th>Duración (sem.)</th><th>Modalidad</th><th>Título otorgado</th></tr>
-              </thead>
-              <tbody id="careers-tbody">
-                <tr><td colspan="8"><div class="empty-state"><div class="big">◌</div>Cargando...</div></td></tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        <div class="card" style="margin-top: 1rem">
-          <div class="section-subtitle">Crear carrera</div>
-          <div class="field">
-            <label>Código</label>
-            <input id="career-code" placeholder="ISC" />
-          </div>
-          <div class="field">
-            <label>Nombre</label>
-            <input id="career-name" placeholder="Ingeniería de Sistemas" />
-          </div>
-          <div class="field">
-            <label>Descripción</label>
-            <input id="career-description" placeholder="Programas de ingeniería y ciencias" />
-          </div>
-          <div class="field">
-            <label>Facultad</label>
-            <input id="career-faculty" placeholder="Facultad de Ingeniería" />
-          </div>
-          <div class="field">
-            <label>Duración (semestres)</label>
-            <input id="career-duration" type="number" min="1" max="20" placeholder="10" />
-          </div>
-          <div class="field">
-            <label>Modalidad</label>
-            <select id="career-modality">
-              <option value="">-- Seleccionar --</option>
-              <option value="Presencial">Presencial</option>
-              <option value="Virtual">Virtual</option>
-              <option value="Semi-presencial">Semi-presencial</option>
-            </select>
-          </div>
-          <div class="field">
-            <label>Título otorgado</label>
-            <input id="career-degree-title" placeholder="Ingeniero de Sistemas" />
-          </div>
-          <button class="btn btn-primary" onclick="createCareer()">Crear carrera</button>
-        </div>
-      </div>
-
-      <div id="sec-teachers" class="section">
-        <div class="section-title">Docentes</div>
-        <div class="academic-admin-tabs admin-only" data-academic-tabs>
-          <button class="academic-admin-tab" data-tab="teachers" onclick="goAcademicAdminTab('teachers')">Docentes</button>
-          <button class="academic-admin-tab" data-tab="courses" onclick="goAcademicAdminTab('courses')">Cursos</button>
-          <button class="academic-admin-tab" data-tab="assignments" onclick="goAcademicAdminTab('assignments')">Asignaciones</button>
-        </div>
-        <div class="card" style="margin-top: 1rem">
-          <button class="btn btn-primary" onclick="loadTeachers()">Actualizar docentes</button>
-          <div class="grid grid-2" style="margin-top: 1rem; gap: .75rem;">
-            <div class="field" style="margin: 0;">
-              <label>Buscar por cédula o nombre</label>
-              <input id="teacher-document-filter" placeholder="Ej: 1067849306 o Juan Pérez" oninput="loadTeachers()" />
-            </div>
-            <div class="field" style="margin: 0;">
-              <label>Filtrar por carrera</label>
-              <select id="teacher-career-filter" onchange="loadTeachers()">
-                <option value="">Todas las carreras</option>
-              </select>
-            </div>
-          </div>
-          <div class="table-wrap" style="margin-top: 1rem">
-            <table>
-              <thead>
-                <tr><th>ID</th><th>Cédula</th><th>Nombres</th><th>Apellidos</th><th>Carrera(s)</th><th>Email</th></tr>
-              </thead>
-              <tbody id="teachers-tbody">
-                <tr><td colspan="6"><div class="empty-state"><div class="big">◌</div>Cargando...</div></td></tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        <div class="card" style="margin-top: 1rem">
-          <div class="section-subtitle">Crear docente</div>
-          <div class="field">
-            <label>Nombres</label>
-            <input id="teacher-first-name" placeholder="Ana María" />
-          </div>
-          <div class="field">
-            <label>Apellidos</label>
-            <input id="teacher-last-name" placeholder="García Pérez" />
-          </div>
-          <div class="field">
-            <label>Email</label>
-            <input id="teacher-email" type="email" placeholder="ana@uni.edu" />
-          </div>
-          <div class="field">
-            <label>Documento</label>
-            <input id="teacher-document" placeholder="12345678" />
-          </div>
-          <div class="field">
-            <label>Carrera (opcional)</label>
-            <select id="teacher-career">
-              <option value="">Sin carrera asignada</option>
-            </select>
-          </div>
-          <div class="field">
-            <label>Contraseña</label>
-            <input id="teacher-password" type="password" placeholder="*****" />
-          </div>
-          <button class="btn btn-primary" onclick="createTeacher()">Crear docente</button>
-        </div>
-      </div>
-
-      <div id="sec-assignments" class="section">
-        <div class="section-title">Asignaciones</div>
-        <div class="section-subtitle">Asigna docentes a materias, filtra por carrera y administra las asignaciones activas.</div>
-        <div class="academic-admin-tabs admin-only" data-academic-tabs>
-          <button class="academic-admin-tab" data-tab="teachers" onclick="goAcademicAdminTab('teachers')">Docentes</button>
-          <button class="academic-admin-tab" data-tab="courses" onclick="goAcademicAdminTab('courses')">Cursos</button>
-          <button class="academic-admin-tab" data-tab="assignments" onclick="goAcademicAdminTab('assignments')">Asignaciones</button>
-        </div>
-
-        <div class="grid grid-3" style="margin-top: 1rem; gap: .75rem;">
-          <div class="stat-card">
-            <div class="stat-title">Total asignaciones</div>
-            <div class="stat-value" id="assign-kpi-total">0</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-title">Cursos con docente</div>
-            <div class="stat-value" id="assign-kpi-courses">0</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-title">Docentes asignados</div>
-            <div class="stat-value" id="assign-kpi-teachers">0</div>
-          </div>
-        </div>
-
-        <div class="card" style="margin-top: 1rem">
-          <div class="section-subtitle">Asignar docente a curso</div>
-          <div class="field">
-            <label>Carrera</label>
-            <select id="assign-course-career-filter" style="width: 100%;" onchange="onAssignmentCareerChange()">
-              <option value="">Selecciona una carrera</option>
-            </select>
-          </div>
-          <div class="field">
-            <label>Buscar curso</label>
-            <input id="assign-course-search" placeholder="Código o nombre" oninput="populateAssignmentCourseSelect()" />
-          </div>
-          <div class="field">
-            <label>Curso</label>
-            <select id="assign-course-select" style="width: 100%;" onchange="onAssignmentCourseChange()">
-              <option value="">Selecciona una carrera primero</option>
-            </select>
-            <div id="assign-detected-career" class="assignment-detected-career">Carrera detectada: —</div>
-          </div>
-          <div class="field">
-            <label>Buscar docente</label>
-            <input id="assign-teacher-search" placeholder="Cédula o nombre" oninput="populateAssignmentTeacherSelect()" />
-          </div>
-          <div class="field">
-            <label>Docente</label>
-            <select id="assign-teacher-select" style="width: 100%;">
-              <option value="">Selecciona carrera y curso primero</option>
-            </select>
-          </div>
-          <div id="assign-edit-banner" style="display:none; margin-bottom:.6rem; padding:.55rem .7rem; border:1px solid var(--line); border-radius:10px; color: var(--muted);">
-            Editando asignación <span id="assign-edit-id"></span>. Guarda cambios para actualizarla.
-          </div>
-          <div id="assign-rule-hint" style="font-size: .85rem; color: var(--muted); margin-bottom: .6rem;">Paso 1: selecciona carrera. Paso 2: elige materia. Paso 3: selecciona docente permitido.</div>
-          <button class="btn btn-primary" id="assign-submit-btn" onclick="assignTeacher()">Asignar</button>
-          <button class="btn btn-secondary" id="assign-cancel-btn" style="display:none" onclick="cancelAssignmentEdit()">Cancelar edición</button>
-        </div>
-
-        <div class="card" style="margin-top: 1rem">
-          <div class="grid grid-3" style="margin-bottom: .8rem; gap: .6rem;">
-            <div class="field" style="margin:0">
-              <label>Filtrar por carrera</label>
-              <select id="assign-career-filter" onchange="loadAssignments()">
-                <option value="">Todas las carreras</option>
-              </select>
-            </div>
-            <div class="field" style="margin:0">
-              <label>Filtrar por docente</label>
-              <input id="assign-teacher-filter-search" placeholder="Cédula o nombre" oninput="populateAssignmentFilters(ASSIGNMENTS)" style="margin-bottom:.45rem" />
-              <select id="assign-teacher-filter" onchange="loadAssignments()">
-                <option value="">Todos los docentes</option>
-              </select>
-            </div>
-            <div class="field" style="margin:0">
-              <label>Filtrar por curso</label>
-              <input id="assign-course-filter-search" placeholder="Código o nombre" oninput="populateAssignmentFilters(ASSIGNMENTS)" style="margin-bottom:.45rem" />
-              <select id="assign-course-filter" onchange="loadAssignments()">
-                <option value="">Todos los cursos</option>
-              </select>
-            </div>
-          </div>
-
-          <div class="table-wrap" style="margin-top: .2rem">
-            <table>
-              <thead>
-                <tr><th>ID</th><th>Carrera</th><th>Curso</th><th>Docente</th><th>Acciones</th></tr>
-              </thead>
-              <tbody id="assignments-tbody">
-                <tr><td colspan="5"><div class="empty-state"><div class="big">◌</div>Cargando...</div></td></tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-
-      <div id="sec-enrollments-admin" class="section">
-        <div class="section-title">Matriculaciones de Estudiantes</div>
-        <div class="section-subtitle">Matricula a los estudiantes en carreras y cursos</div>
-        
-        <div class="card">
-          <div class="section-subtitle">Matricular Estudiante</div>
-          
-          <div class="field">
-            <label>Seleccionar Carrera</label>
-            <select id="enroll-career-select" style="width: 100%;" onchange="loadCoursesForCareer()">
-              <option value="">Selecciona una carrera</option>
-            </select>
-          </div>
-
-          <div class="field">
-            <label>Seleccionar Curso</label>
-            <select id="enroll-course-select" style="width: 100%;">
-              <option value="">Selecciona un curso (carga una carrera primero)</option>
-            </select>
-          </div>
-
-          <div class="field">
-            <label>Seleccionar Estudiante</label>
-            <input id="enroll-student-search" type="text" placeholder="Buscar por cédula o nombre..." style="margin-bottom: 8px;" oninput="filterStudents()">
-            <select id="enroll-student-select" style="width: 100%;">
-              <option value="">Selecciona un estudiante</option>
-            </select>
-          </div>
-
-          <button class="btn btn-primary" onclick="enrollStudent()">Matricular Estudiante</button>
-          <button class="btn btn-secondary" onclick="loadEnrollmentsData()">Recargar datos</button>
-        </div>
-
-        <div class="card" style="margin-top: 1rem">
-          <div class="section-subtitle">Matriculaciones Actuales</div>
-          <div class="table-wrap">
-            <table>
-              <thead>
-                <tr><th>ID</th><th>Cédula</th><th>Estudiante</th><th>Email</th><th>Curso</th><th>Estado</th><th>Fecha</th><th>Acciones</th></tr>
-              </thead>
-              <tbody id="enrollments-admin-tbody">
-                <tr><td colspan="8"><div class="empty-state"><div class="big">◌</div>Cargando...</div></td></tr>
-              </tbody>
-            </table>
-          </div>
-          <div style="display:flex;justify-content:flex-end;gap:.5rem;align-items:center;margin-top:.75rem;">
-            <button class="btn btn-secondary btn-sm" onclick="loadEnrollmentsTable(Math.max(1, ENROLLMENTS_ADMIN_PAGE - 1))">◀ Anterior</button>
-            <span id="enrollments-admin-page-label" style="font-size:.85rem;color:var(--muted);">Página 1</span>
-            <button class="btn btn-secondary btn-sm" onclick="loadEnrollmentsTable(ENROLLMENTS_ADMIN_PAGE + 1)">Siguiente ▶</button>
-          </div>
-        </div>
-        <div class="card" style="margin-top: 1rem">
-          <div class="section-subtitle">Gestión de Estudiantes</div>
-          <button class="btn btn-secondary btn-sm" onclick="loadStudentsManagement()">🔁 Actualizar</button>
-          <div class="table-wrap" style="margin-top: .75rem">
-            <table>
-              <thead>
-                <tr><th>ID</th><th>Cédula</th><th>Nombre</th><th>Email</th><th>Programa</th><th>Estado</th><th>Acciones</th></tr>
-              </thead>
-              <tbody id="students-mgmt-tbody">
-                <tr><td colspan="7"><div class="empty-state"><div class="big">◌</div>Haz clic en Actualizar para cargar estudiantes.</div></td></tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-
-      <div id="sec-grades" class="section">
-        <div class="section-title">Calificaciones</div>
-        <div class="section-subtitle">Gestión académica de notas por curso, componentes y definitivas.</div>
-
-        <!-- ═══════ VISTA DOCENTE ═══════ -->
-        <div id="grades-teacher-panel" style="display:none;">
-
-          <!-- Paso 1: selector de curso -->
-          <div class="card" style="margin-bottom:1rem;">
-            <div class="card-title">📋 Mis libros de calificaciones</div>
-            <div style="display:flex;gap:.75rem;flex-wrap:wrap;align-items:flex-end;">
-              <div>
-                <label style="font-size:.8rem;color:var(--muted);display:block;margin-bottom:4px;">Período</label>
-                <input id="gb-period" type="text" placeholder="2026-1" style="width:120px;" />
-              </div>
-              <div>
-                <label style="font-size:.8rem;color:var(--muted);display:block;margin-bottom:4px;">Curso (ID)</label>
-                <input id="gb-course-filter" type="number" placeholder="Todos" style="width:110px;" />
-              </div>
-              <div>
-                <label style="font-size:.8rem;color:var(--muted);display:block;margin-bottom:4px;">Sección</label>
-                <input id="gb-section-filter" type="text" placeholder="A" style="width:80px;" />
-              </div>
-              <button class="btn btn-secondary btn-sm" onclick="loadGradebooks()">🔄 Cargar</button>
-              <button class="btn btn-primary btn-sm" onclick="showCreateGradebookModal()">+ Nuevo libro</button>
-            </div>
-            <div style="overflow-x:auto;margin-top:1rem;">
-              <table class="table" id="gradebooks-table">
-                <thead><tr><th>ID</th><th>Curso</th><th>Período</th><th>Sección</th><th>Estado</th><th>Acciones</th></tr></thead>
-                <tbody id="gradebooks-tbody">
-                  <tr><td colspan="6"><div class="empty-state"><div class="big">◌</div>Carga tus libros de calificaciones.</div></td></tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          <!-- Detalle del libro seleccionado -->
-          <div id="gradebook-detail" style="display:none;">
-            <div class="card" style="margin-bottom:1rem;">
-              <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.5rem;">
-                <div>
-                  <div class="card-title" id="gradebook-detail-title">Libro de calificaciones</div>
-                  <div style="font-size:.85rem;color:var(--muted);" id="gradebook-detail-meta"></div>
-                </div>
-                <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
-                  <button class="btn btn-secondary btn-sm" onclick="closeGradebookDetail()">← Volver</button>
-                  <button id="btn-recalc" class="btn btn-primary btn-sm" onclick="recalcuateGrades()">⟳ Recalcular</button>
-                  <button id="btn-publish" class="btn btn-secondary btn-sm" onclick="setGradebookStatus('published')">📢 Publicar</button>
-                  <button id="btn-close-gb" class="btn btn-secondary btn-sm" onclick="setGradebookStatus('closed')">🔒 Cerrar acta</button>
-                </div>
-              </div>
-            </div>
-
-            <!-- Componentes evaluativos -->
-            <div class="card" style="margin-bottom:1rem;">
-              <div class="card-title">⚖️ Componentes evaluativos</div>
-              <div id="components-list" style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:1rem;"></div>
-              <div id="components-weight-bar" style="height:8px;border-radius:4px;background:var(--surface2);overflow:hidden;margin-bottom:.5rem;"><div id="weight-fill" style="height:100%;background:var(--accent);transition:width .3s;"></div></div>
-              <div id="weight-info" style="font-size:.8rem;color:var(--muted);margin-bottom:1rem;"></div>
-              <div id="add-component-panel" style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:flex-end;">
-                <div>
-                  <label style="font-size:.8rem;color:var(--muted);display:block;margin-bottom:4px;">Nombre</label>
-                  <input id="comp-name" type="text" placeholder="Ej: Parcial 1" style="width:150px;" />
-                </div>
-                <div>
-                  <label style="font-size:.8rem;color:var(--muted);display:block;margin-bottom:4px;">Peso (%)</label>
-                  <input id="comp-weight" type="number" min="1" max="100" placeholder="25" style="width:80px;" />
-                </div>
-                <button class="btn btn-primary btn-sm" onclick="addComponent()">+ Agregar</button>
-              </div>
-            </div>
-
-            <!-- Tabla de notas (roster) -->
-            <div class="card">
-              <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.5rem;margin-bottom:1rem;">
-                <div class="card-title" style="margin:0">📝 Notas por estudiante</div>
-                <button class="btn btn-secondary btn-sm" onclick="loadRoster()">🔄 Actualizar</button>
-              </div>
-              <div style="overflow-x:auto;">
-                <table class="table" id="roster-table">
-                  <thead id="roster-thead"><tr><th>Estudiante</th><th>Definitiva</th><th>Estado</th><th>Acción</th></tr></thead>
-                  <tbody id="roster-tbody">
-                    <tr><td colspan="10"><div class="empty-state"><div class="big">◌</div>Selecciona un libro para ver el roster.</div></td></tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- ═══════ VISTA ESTUDIANTE ═══════ -->
-        <div id="grades-student-panel" style="display:none;">
-          <div class="card">
-            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.5rem;margin-bottom:1rem;">
-              <div class="card-title">📊 Mis calificaciones</div>
-              <div style="display:flex;gap:.5rem;align-items:flex-end;">
-                <button class="btn btn-secondary btn-sm" onclick="loadMyGrades()">🔄 Actualizar</button>
-              </div>
-            </div>
-            <div id="my-grades-content">
-              <div class="empty-state"><div class="big">◌</div>Se mostrarán tus actividades calificadas de materias activas.</div>
-            </div>
-          </div>
-        </div>
-
-        <!-- ═══════ VISTA ADMIN ═══════ -->
-        <div id="grades-admin-panel" style="display:none;">
-          <div class="card">
-            <div class="card-title">📊 Todos los libros de calificaciones</div>
-            <div style="display:flex;gap:.75rem;flex-wrap:wrap;align-items:flex-end;margin-bottom:1rem;">
-              <div>
-                <label style="font-size:.8rem;color:var(--muted);display:block;margin-bottom:4px;">Período</label>
-                <input id="admin-gb-period" type="text" placeholder="2026-1" style="width:120px;" />
-              </div>
-              <button class="btn btn-secondary btn-sm" onclick="loadAdminGradebooks()">🔄 Cargar</button>
-            </div>
-            <div style="overflow-x:auto;">
-              <table class="table">
-                <thead><tr><th>ID</th><th>Curso</th><th>Período</th><th>Sección</th><th>Docente</th><th>Estado</th><th>Acción</th></tr></thead>
-                <tbody id="admin-gradebooks-tbody">
-                  <tr><td colspan="7"><div class="empty-state"><div class="big">◌</div>Carga los libros.</div></td></tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-
-        <!-- Modal: nuevo libro -->
-        <div id="modal-new-gradebook" class="modal-overlay" style="display:none;" onclick="if(event.target===this)this.style.display='none'">
-          <div class="modal-box">
-            <div class="modal-title">+ Nuevo libro de calificaciones</div>
-            <div class="form-group"><label>Curso (ID)</label><input id="new-gb-course" type="number" placeholder="Ej: 1" /></div>
-            <div class="form-group"><label>Período</label><input id="new-gb-period" type="text" placeholder="2026-1" /></div>
-            <div class="form-group"><label>Sección</label><input id="new-gb-section" type="text" placeholder="A" /></div>
-            <div style="display:flex;gap:.5rem;justify-content:flex-end;margin-top:1rem;">
-              <button class="btn btn-secondary btn-sm" onclick="document.getElementById('modal-new-gradebook').style.display='none'">Cancelar</button>
-              <button class="btn btn-primary btn-sm" onclick="createGradebook()">Crear</button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Modal: ingresar nota de un estudiante -->
-        <div id="modal-grade-input" class="modal-overlay" style="display:none;" onclick="if(event.target===this)this.style.display='none'">
-          <div class="modal-box">
-            <div class="modal-title" id="grade-input-title">Ingresar notas</div>
-            <div id="grade-input-fields"></div>
-            <div style="display:flex;gap:.5rem;justify-content:flex-end;margin-top:1rem;">
-              <button class="btn btn-secondary btn-sm" onclick="document.getElementById('modal-grade-input').style.display='none'">Cancelar</button>
-              <button class="btn btn-primary btn-sm" onclick="saveGradeItems()">Guardar</button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Modal: override manual -->
-        <div id="modal-override" class="modal-overlay" style="display:none;" onclick="if(event.target===this)this.style.display='none'">
-          <div class="modal-box">
-            <div class="modal-title">✏️ Ajuste manual de definitiva</div>
-            <div class="form-group"><label>Nueva definitiva (0.0–5.0)</label><input id="override-score" type="number" step="0.1" min="0" max="5" /></div>
-            <div class="form-group"><label>Motivo obligatorio</label><textarea id="override-reason" rows="3" style="width:100%;background:var(--surface2);border:1px solid var(--border);color:var(--fg);border-radius:6px;padding:.5rem;"></textarea></div>
-            <div style="display:flex;gap:.5rem;justify-content:flex-end;margin-top:1rem;">
-              <button class="btn btn-secondary btn-sm" onclick="document.getElementById('modal-override').style.display='none'">Cancelar</button>
-              <button class="btn btn-primary btn-sm" onclick="submitOverride()">Guardar ajuste</button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Modal: seleccionar secciones para matricular -->
-        <div id="modal-course-sections" class="modal-overlay" style="display:none;" onclick="if(event.target===this)this.style.display='none'">
-          <div class="modal-box" style="max-width:700px;">
-            <div class="modal-title" id="modal-sections-title">Selecciona una sección</div>
-            <div class="table-wrap" style="margin:1rem 0;">
-              <table>
-                <thead>
-                  <tr><th>Sección</th><th>Día</th><th>Hora</th><th>Aula</th><th>Profesor</th><th></th></tr>
-                </thead>
-                <tbody id="modal-sections-tbody">
-                  <tr><td colspan="6" style="text-align:center;color:var(--muted);">Cargando secciones...</td></tr>
-                </tbody>
-              </table>
-            </div>
-            <div style="display:flex;gap:.5rem;justify-content:flex-end;">
-              <button class="btn btn-secondary btn-sm" onclick="document.getElementById('modal-course-sections').style.display='none'">Cerrar</button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- ═══════ BUZONES DE ACTIVIDADES ═══════ -->
-      <div id="sec-buzones" class="section">
-        <div class="section-title">Actividades y Entregas</div>
-        <div class="section-subtitle">Buzones de envío de trabajos por curso.</div>
-
-        <!-- Vista Docente -->
-        <div id="buzones-teacher-panel" style="display:none;">
-          <div class="card">
-            <div class="card-title">📋 Mis buzones de actividad</div>
-            <div style="display:flex;gap:.6rem;flex-wrap:wrap;align-items:flex-end;margin-bottom:.8rem;">
-              <div class="field" style="margin:0;min-width:220px;">
-                <label>Curso</label>
-                <select id="buz-teacher-course" style="width:100%;" onchange="loadTeacherBuzones()">
-                  <option value="">— Selecciona un curso —</option>
-                </select>
-              </div>
-              <button class="btn btn-secondary" onclick="loadTeacherBuzones()">🔍 Cargar</button>
-              <button class="btn btn-primary" onclick="openCreateBuzonModal()">+ Nuevo buzón</button>
-              <button class="btn" style="background:#8b5cf6;color:#fff;" onclick="loadDefinitivas()">📊 Ver definitivas</button>
-            </div>
-            <div class="table-wrap">
-              <table>
-                <thead><tr><th>ID</th><th>Título</th><th>Vence</th><th>Peso %</th><th>Envíos</th><th>Acciones</th></tr></thead>
-                <tbody id="teacher-buzones-tbody">
-                  <tr><td colspan="6"><div class="empty-state"><div class="big">◌</div>Selecciona un curso y carga tus buzones.</div></td></tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          <!-- Panel de envíos de un buzón -->
-          <div id="buzon-submissions-panel" style="display:none;margin-top:1rem;">
-            <div class="card">
-              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.8rem;">
-                <div class="card-title" id="buzon-submissions-title">Envíos</div>
-                <button class="btn btn-secondary btn-sm" onclick="document.getElementById('buzon-submissions-panel').style.display='none'">✕ Cerrar</button>
-              </div>
-              <div class="table-wrap">
-                <table>
-                  <thead><tr><th>ID</th><th>Estudiante</th><th>Enviado</th><th>Comentario</th><th>Archivo</th><th>Nota</th><th>Acciones</th></tr></thead>
-                  <tbody id="submissions-tbody">
-                    <tr><td colspan="7"><div class="empty-state"><div class="big">◌</div>Sin envíos aún.</div></td></tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-
-          <!-- Panel de definitivas -->
-          <div id="definitivas-panel" style="display:none;margin-top:1rem;">
-            <div class="card">
-              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.8rem;">
-                <div class="card-title">📊 Notas definitivas del curso</div>
-                <button class="btn btn-secondary btn-sm" onclick="document.getElementById('definitivas-panel').style.display='none'">✕ Cerrar</button>
-              </div>
-              <div id="definitivas-weight-warning" style="display:none;background:#7f1d1d;color:#fca5a5;padding:.6rem .9rem;border-radius:8px;margin-bottom:.8rem;font-size:.85rem;"></div>
-              <div class="table-wrap" id="definitivas-table-wrap"></div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Vista Estudiante -->
-        <div id="buzones-student-panel" style="display:none;">
-          <div class="card">
-            <div class="card-title">📬 Mis actividades pendientes</div>
-            <div class="student-activities-shell">
-              <div class="student-activities-summary">
-                <div class="student-activities-kpi">
-                  <div class="kpi-label">Pendientes</div>
-                  <div class="kpi-value" id="student-activities-kpi-pending">0</div>
-                  <div class="kpi-sub">Sin entregar</div>
-                </div>
-                <div class="student-activities-kpi">
-                  <div class="kpi-label">Vencen hoy</div>
-                  <div class="kpi-value" id="student-activities-kpi-today">0</div>
-                  <div class="kpi-sub">Atención inmediata</div>
-                </div>
-                <div class="student-activities-kpi">
-                  <div class="kpi-label">Vencidas</div>
-                  <div class="kpi-value" id="student-activities-kpi-overdue">0</div>
-                  <div class="kpi-sub">Revisar prioridad</div>
-                </div>
-                <div class="student-activities-kpi">
-                  <div class="kpi-label">Entregadas</div>
-                  <div class="kpi-value" id="student-activities-kpi-submitted">0</div>
-                  <div class="kpi-sub">Con o sin nota</div>
-                </div>
-              </div>
-              <div class="student-activities-filters">
-                <div class="field" style="margin:0;min-width:160px;">
-                  <label>Curso</label>
-                  <select id="buz-student-course" style="width:100%;" onchange="loadStudentBuzones()">
-                    <option value="">— Todos tus cursos —</option>
-                  </select>
-                </div>
-                <div class="field" style="margin:0;min-width:160px;">
-                  <label>Estado</label>
-                  <select id="buz-student-status" style="width:100%;" onchange="loadStudentBuzones()">
-                    <option value="">Todos</option>
-                    <option value="pending">Pendientes</option>
-                    <option value="today">Vencen hoy</option>
-                    <option value="overdue">Vencidas</option>
-                    <option value="submitted">Entregadas</option>
-                    <option value="graded">Calificadas</option>
-                  </select>
-                </div>
-                <div class="field" style="margin:0;min-width:220px;">
-                  <label>Buscar</label>
-                  <input id="buz-student-search" placeholder="Título o curso" oninput="loadStudentBuzones()" />
-                </div>
-                <div class="field" style="margin:0;min-width:180px;">
-                  <label>Ordenar</label>
-                  <select id="buz-student-sort" style="width:100%;" onchange="loadStudentBuzones()">
-                    <option value="urgency">Por urgencia</option>
-                    <option value="due_asc">Fecha límite</option>
-                    <option value="course">Curso</option>
-                    <option value="title">Título</option>
-                  </select>
-                </div>
-              </div>
-              <div id="student-buzones-list" class="student-activities-list"></div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Modal: crear buzón -->
-        <div id="modal-create-buzon" class="modal-overlay" style="display:none;">
-          <div class="modal-box" style="max-width:460px;">
-            <div class="modal-title">+ Nuevo buzón de actividad</div>
-            <div class="field">
-              <label>Curso</label>
-              <select id="cb-course-id" style="width:100%;">
-                <option value="">— Selecciona un curso —</option>
-              </select>
-            </div>
-            <div class="field"><label>Título</label><input id="cb-title" placeholder="Ej: Taller Momento 1" /></div>
-            <div class="field"><label>Descripción (opcional)</label><textarea id="cb-description" rows="3" placeholder="Instrucciones del trabajo..."></textarea></div>
-            <div class="field">
-              <label>Fecha límite (opcional)</label>
-              <div style="display:flex;gap:.5rem;align-items:center;">
-                <button type="button" class="btn btn-secondary" style="flex:1;text-align:left;" id="cb-due-date-btn" onclick="openCalPicker('cb-due-date')">📅 Seleccionar fecha y hora</button>
-                <button type="button" class="btn btn-secondary btn-sm" id="cb-due-date-clear" style="display:none;padding:.3rem .6rem;" onclick="clearCalPicker('cb-due-date')">✕</button>
-              </div>
-              <input type="hidden" id="cb-due-date" />
-            </div>
-            <div class="field">
-              <label>Peso en la nota final (%)</label>
-              <input id="cb-weight" type="number" step="0.1" min="0" max="100" value="0" placeholder="0 = no cuenta" />
-              <small style="color:var(--muted);font-size:.75rem;">Ej: 30 para Momento 1. Deja 0 si es actividad sin nota.</small>
-            </div>
-            <div class="field" style="display:none;"><label>Nota máxima (0.1 – 5.0)</label><input id="cb-max-score" type="number" step="0.1" min="0.1" max="5.0" value="5.0" /></div>
-            <div style="display:flex;gap:.5rem;margin-top:.8rem;">
-              <button class="btn btn-primary" onclick="createBuzon()">Crear</button>
-              <button class="btn btn-secondary" onclick="document.getElementById('modal-create-buzon').style.display='none'">Cancelar</button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Modal: calificar envío -->
-        <div id="modal-grade-submission" class="modal-overlay" style="display:none;">
-          <div class="modal-box" style="max-width:420px;">
-            <div class="modal-title">✏️ Calificar envío</div>
-            <input type="hidden" id="grade-submission-id" />
-            <div class="field">
-              <label>Nota (0.0 – 5.0)</label>
-              <input id="grade-score" type="number" step="0.1" min="0.0" max="5.0" placeholder="Ej: 4.2" />
-            </div>
-            <div class="field">
-              <label>Comentario para el estudiante (opcional)</label>
-              <textarea id="grade-comment" rows="3" placeholder="Retroalimentación..."></textarea>
-            </div>
-            <div style="display:flex;gap:.5rem;margin-top:.8rem;">
-              <button class="btn btn-primary" onclick="submitGrade()">Guardar calificación</button>
-              <button class="btn btn-secondary" onclick="document.getElementById('modal-grade-submission').style.display='none'">Cancelar</button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Modal: enviar trabajo (estudiante) -->
-        <div id="modal-submit-work" class="modal-overlay" style="display:none;">
-          <div class="modal-box" style="max-width:440px;">
-            <div class="modal-title">📤 Enviar trabajo</div>
-            <div class="modal-subtitle" id="submit-work-title"></div>
-            <input type="hidden" id="submit-assignment-id" />
-            <div class="field">
-              <label>Archivo (opcional, máx 15 MB)</label>
-              <input id="submit-file" type="file" />
-            </div>
-            <div class="field">
-              <label>Comentario (opcional)</label>
-              <textarea id="submit-comment" rows="3" placeholder="Mensaje para el docente..."></textarea>
-            </div>
-            <div style="display:flex;gap:.5rem;margin-top:.8rem;">
-              <button class="btn btn-primary" onclick="submitWork()">Enviar</button>
-              <button class="btn btn-secondary" onclick="document.getElementById('modal-submit-work').style.display='none'">Cancelar</button>
-            </div>
-          </div>
-        </div>
-
-        <div id="modal-schedule-detail" class="modal-overlay" style="display:none;" onclick="if(event.target===this)this.style.display='none'">
-          <div class="modal-box" style="max-width:520px;">
-            <div class="modal-title">Detalle de clase</div>
-            <div class="modal-subtitle" id="schedule-detail-subtitle"></div>
-            <div class="activity-card-meta" style="margin-top:1rem;">
-              <div class="activity-meta-block"><div class="activity-meta-label">Código</div><div class="activity-meta-value" id="schedule-detail-code">—</div></div>
-              <div class="activity-meta-block"><div class="activity-meta-label">Nombre</div><div class="activity-meta-value" id="schedule-detail-name">—</div></div>
-              <div class="activity-meta-block"><div class="activity-meta-label">Hora</div><div class="activity-meta-value" id="schedule-detail-time">—</div></div>
-              <div class="activity-meta-block"><div class="activity-meta-label">Aula</div><div class="activity-meta-value" id="schedule-detail-room">—</div></div>
-              <div class="activity-meta-block"><div class="activity-meta-label">Docente</div><div class="activity-meta-value" id="schedule-detail-teacher">—</div></div>
-              <div class="activity-meta-block"><div class="activity-meta-label">Duración</div><div class="activity-meta-value" id="schedule-detail-duration">—</div></div>
-              <div class="activity-meta-block"><div class="activity-meta-label">Sección</div><div class="activity-meta-value" id="schedule-detail-section">—</div></div>
-              <div class="activity-meta-block"><div class="activity-meta-label">Conflicto</div><div class="activity-meta-value" id="schedule-detail-conflict">Sin conflicto</div></div>
-            </div>
-            <div style="display:flex;gap:.5rem;flex-wrap:wrap;justify-content:flex-end;margin-top:1rem;">
-              <button class="btn btn-secondary" id="schedule-detail-announcements-btn" onclick="openScheduleCourseSection('comunicaciones')">Ver anuncios</button>
-              <button class="btn btn-secondary" id="schedule-detail-activities-btn" onclick="openScheduleCourseSection('buzones')">Ver actividades</button>
-              <button class="btn btn-primary" onclick="document.getElementById('modal-schedule-detail').style.display='none'">Cerrar</button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- ═══════ COMUNICACIONES ═══════ -->
-      <div id="sec-comunicaciones" class="section">
-        <div class="section-title">Comunicaciones</div>
-        <div class="section-subtitle">Anuncios de tus cursos para estar al día.</div>
-
-        <!-- Panel DOCENTE -->
-        <div class="teacher-only">
-          <div class="card">
-            <div class="card-title">📢 Publicar anuncio</div>
-            <div style="display:flex;gap:.75rem;align-items:center;flex-wrap:wrap;">
-              <select id="ann-teacher-course" style="flex:1;min-width:180px;" onchange="loadTeacherAnnouncements()">
-                <option value="">— Selecciona un curso —</option>
-              </select>
-              <button class="btn btn-primary" onclick="openAnnouncementModal()">+ Nuevo anuncio</button>
-            </div>
-            <div id="ann-teacher-list" style="margin-top:1rem;"></div>
-          </div>
-        </div>
-
-        <!-- Panel ESTUDIANTE -->
-        <div class="student-only">
-          <div class="card">
-            <div class="card-title">📣 Anuncios de tus materias</div>
-            <div style="display:flex;gap:.75rem;align-items:center;flex-wrap:wrap;">
-              <select id="ann-student-course" style="flex:1;min-width:180px;" onchange="loadStudentAnnouncements()">
-                <option value="">— Todos tus cursos —</option>
-              </select>
-            </div>
-            <div id="ann-student-list" style="margin-top:1rem;"></div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Modal crear anuncio -->
-      <div id="modal-create-ann" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;display:none;align-items:center;justify-content:center;">
-        <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:1.5rem;width:min(500px,92vw);max-height:90vh;overflow-y:auto;">
-          <div class="card-title">Nuevo anuncio</div>
-          <div class="field"><label>Título</label><input id="ann-title" placeholder="Ej: Cambio de fecha del parcial" /></div>
-          <div class="field"><label>Mensaje</label><textarea id="ann-body" rows="5" placeholder="Escribe aquí el contenido del anuncio..."></textarea></div>
-          <div class="field" style="display:flex;align-items:center;gap:.5rem;">
-            <input type="checkbox" id="ann-pinned" style="width:auto;" />
-            <label for="ann-pinned" style="margin:0;">Fijar anuncio (aparece primero)</label>
-          </div>
-          <div style="display:flex;gap:.5rem;margin-top:.8rem;">
-            <button class="btn btn-primary" onclick="createAnnouncement()">Publicar</button>
-            <button class="btn btn-secondary" onclick="document.getElementById('modal-create-ann').style.display='none'">Cancelar</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Modal: lista de estudiantes matriculados en un curso -->
-      <div id="modal-course-students" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:9999;align-items:center;justify-content:center;">
-        <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:1.5rem;width:min(640px,95vw);max-height:88vh;overflow-y:auto;">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
-            <div class="card-title" id="modal-course-students-title" style="margin:0;">Estudiantes matriculados</div>
-            <button class="btn btn-secondary btn-sm" onclick="document.getElementById('modal-course-students').style.display='none'">✕ Cerrar</button>
-          </div>
-          <div id="modal-course-students-body">
-            <div class="empty-state"><div class="big">◌</div>Cargando...</div>
-          </div>
-        </div>
-      </div>
-
-      <div id="sec-reports" class="section">
-        <div class="section-title">Informes y Reportes</div>
-        <div class="section-subtitle">Genera informes académicos y financieros en PDF o CSV.</div>
-
-        <!-- Panel admin: reporte de estudiante -->
-        <div class="card admin-only" id="rpt-student-card">
-          <div class="card-title" style="display:flex;align-items:center;gap:.5rem;">
-            <span style="font-size:1.4rem;">🎓</span> Reporte de Estudiante
-          </div>
-          <p style="color:var(--muted);font-size:.9rem;margin-bottom:1rem;">
-            Consolida promedio académico y resumen financiero de un estudiante.
-          </p>
-          <div style="display:flex;gap:.75rem;align-items:flex-end;flex-wrap:wrap;">
-            <div>
-              <label style="font-size:.8rem;color:var(--muted);display:block;margin-bottom:4px;">Cédula del Estudiante</label>
-              <input id="rpt-student-id" type="text" placeholder="ej. 1234567890" style="width:160px;" />
-            </div>
-            <button class="btn btn-primary" onclick="downloadReport('student','pdf')">
-              📄 Descargar PDF
-            </button>
-            <button class="btn btn-secondary" onclick="downloadReport('student','csv')">
-              📊 Descargar CSV
-            </button>
-          </div>
-          <div id="rpt-student-msg" style="margin-top:.6rem;font-size:.85rem;"></div>
-        </div>
-
-        <!-- Panel admin: reporte de curso -->
-        <div class="card admin-only" id="rpt-course-card" style="margin-top:1rem;">
-          <div class="card-title" style="display:flex;align-items:center;gap:.5rem;">
-            <span style="font-size:1.4rem;">📚</span> Reporte de Curso
-          </div>
-          <p style="color:var(--muted);font-size:.9rem;margin-bottom:1rem;">
-            Lista completa de calificaciones, promedios y estadísticas del grupo de un curso.
-          </p>
-          <div style="display:flex;gap:.75rem;align-items:flex-end;flex-wrap:wrap;">
-            <div>
-              <label style="font-size:.8rem;color:var(--muted);display:block;margin-bottom:4px;">Carrera</label>
-              <select id="rpt-course-career" style="width:160px;" onchange="loadReportCoursesByCareer()">
-                <option value="">— Selecciona carrera —</option>
-              </select>
-            </div>
-            <div>
-              <label style="font-size:.8rem;color:var(--muted);display:block;margin-bottom:4px;">Curso</label>
-              <select id="rpt-course-id" style="width:200px;">
-                <option value="">— Selecciona curso —</option>
-              </select>
-            </div>
-            <button class="btn btn-primary" onclick="downloadReport('course','pdf')">
-              📄 Descargar PDF
-            </button>
-            <button class="btn btn-secondary" onclick="downloadReport('course','csv')">
-              📊 Descargar CSV
-            </button>
-          </div>
-          <div id="rpt-course-msg" style="margin-top:.6rem;font-size:.85rem;"></div>
-        </div>
-
-        <!-- Panel estudiante: mi reporte -->
-        <div class="card student-only" id="rpt-me-card">
-          <div class="card-title" style="display:flex;align-items:center;gap:.5rem;">
-            <span style="font-size:1.4rem;">📋</span> Mi Informe Académico
-          </div>
-          <p style="color:var(--muted);font-size:.9rem;margin-bottom:1rem;">
-            Descarga tu informe con todas tus notas y resumen financiero.
-          </p>
-          <div style="display:flex;gap:.75rem;flex-wrap:wrap;">
-            <button class="btn btn-primary" onclick="downloadMyReport('pdf')">
-              📄 Descargar PDF
-            </button>
-            <button class="btn btn-secondary" onclick="downloadMyReport('csv')">
-              📊 Descargar CSV
-            </button>
-          </div>
-          <div id="rpt-me-msg" style="margin-top:.6rem;font-size:.85rem;"></div>
-        </div>
-      </div>
-
-      <div id="sec-payment" class="section">
-        <div class="section-title">Pagos</div>
-        <div class="section-subtitle">Gestión financiera y checkout seguro con Wompi</div>
-
-        <!-- Resumen financiero -->
-        <div class="stats-grid payment-stats-grid" id="payment-summary-cards" style="grid-template-columns:repeat(4,1fr);display:none;">
-          <div class="stat-card">
-            <div class="num" id="pay-stat-debt" style="color:var(--danger)">—</div>
-            <div class="label">Deuda total</div>
-          </div>
-          <div class="stat-card">
-            <div class="num" id="pay-stat-paid" style="color:var(--accent)">—</div>
-            <div class="label">Total pagado</div>
-          </div>
-          <div class="stat-card">
-            <div class="num" id="pay-stat-balance" style="color:var(--warn)">—</div>
-            <div class="label">Saldo pendiente</div>
-          </div>
-          <div class="stat-card">
-            <div class="num" id="pay-stat-status" style="font-size:1rem">—</div>
-            <div class="label">Estado cuenta</div>
-          </div>
-        </div>
-
-        <!-- Panel estudiante: formulario de pago -->
-        <div id="payment-student-panel" style="display:none;">
-          <div class="card payment-shell" style="margin-bottom:1rem;">
-            <div class="card-title">Checkout de matrícula</div>
-            <p style="color:var(--muted);font-size:.92rem;margin-bottom:.35rem;">
-              Los métodos de pago y datos bancarios se gestionan directamente en Wompi.
-            </p>
-            <p style="color:var(--muted);font-size:.82rem;margin-bottom:.95rem;">
-              Aquí solo generas y verificas el checkout de tu factura pendiente.
-            </p>
-
-            <!-- Campos técnicos ocultos para mantener compatibilidad del flujo actual -->
-            <input id="pay-amount" type="number" min="1000" step="1000" style="display:none;" />
-            <select id="pay-concept" style="display:none;">
-              <option value="Matrícula">Matrícula</option>
-              <option value="Derechos de grado">Derechos de grado</option>
-              <option value="Certificados">Certificados</option>
-              <option value="Otro">Otro</option>
-            </select>
-            <select id="pay-bank" style="display:none;"><option value="">—</option></select>
-            <select id="pay-person-type" style="display:none;"><option value="0">Natural</option></select>
-            <select id="pay-doc-type" style="display:none;"><option value="CC">CC</option></select>
-            <input id="pay-nequi-phone" type="tel" style="display:none;" />
-            <input id="pay-card-number" type="text" style="display:none;" />
-            <input id="pay-card-exp" type="text" style="display:none;" />
-            <input id="pay-card-cvv" type="password" style="display:none;" />
-            <input id="pay-card-name" type="text" style="display:none;" />
-            <select id="pay-card-installments" style="display:none;"><option value="1">1</option></select>
-
-            <div id="pay-result-area" style="margin-top:1rem;min-height:32px;"></div>
-
-            <div class="payment-actions">
-              <button class="btn btn-primary" id="btn-pay-submit" onclick="submitPayment()">Pagar ahora</button>
-              <button class="btn btn-secondary btn-sm" onclick="loadPaymentSection()">🔁 Actualizar resumen</button>
-              <button class="btn btn-secondary btn-sm" onclick="clearAllPendingEnrollmentLocalState()">Limpiar factura pendiente</button>
-            </div>
-          </div>
-
-          <!-- Historial de pagos estudiante -->
-          <div class="card payment-history-card">
-            <div class="card-title">Historial de pagos</div>
-            <div class="table-wrap">
-              <table class="payment-history-table">
-                <thead>
-                  <tr><th>Fecha</th><th>Concepto</th><th>Método</th><th>Monto</th><th>Referencia</th><th>Estado</th></tr>
-                </thead>
-                <tbody id="payment-history-tbody">
-                  <tr><td colspan="6"><div class="empty-state"><div class="big">◌</div>Cargando historial...</div></td></tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-
-        <!-- Panel admin: gestión de deudas y todos los pagos -->
-        <div id="payment-admin-panel" style="display:none;">
-          <div class="row" style="margin-bottom:1rem;">
-            <div class="card">
-              <div class="card-title">Agregar deuda a estudiante</div>
-              <div class="field">
-                <label>ID de estudiante</label>
-                <input id="admin-debt-student-id" type="number" placeholder="ID del estudiante" />
-              </div>
-              <div class="field">
-                <label>Monto (COP)</label>
-                <input id="admin-debt-amount" type="number" min="1000" placeholder="Ej: 2500000" />
-              </div>
-              <div class="field">
-                <label>Descripción</label>
-                <input id="admin-debt-description" placeholder="Matrícula semestre 2025-1" />
-              </div>
-              <button class="btn btn-primary" onclick="adminAddDebt()">Registrar deuda</button>
-            </div>
-            <div class="card">
-              <div class="card-title">Consultar cuenta de estudiante</div>
-              <div class="field">
-                <label>ID de estudiante</label>
-                <input id="admin-check-student-id" type="number" placeholder="ID del estudiante" />
-              </div>
-              <button class="btn btn-secondary" onclick="adminCheckAccount()">Consultar</button>
-              <div id="admin-account-result" style="margin-top:1rem;color:var(--muted);font-size:.875rem;"></div>
-            </div>
-          </div>
-          <div class="card">
-            <div class="card-title">Estado del servicio de pagos</div>
-            <button class="btn btn-secondary btn-sm" onclick="loadPaymentServiceStatus()">🔁 Verificar</button>
-            <div id="payment-service-status" style="margin-top:1rem;color:var(--muted);font-size:.875rem;"></div>
-          </div>
-        </div>
-
-        <!-- Panel genérico (no logueado o rol desconocido) -->
-        <div id="payment-generic-panel">
-          <div class="card">
-            <p style="color:var(--muted);">Inicia sesión para acceder al módulo de pagos.</p>
-            <button class="btn btn-primary" style="margin-top:1rem;" onclick="loadPaymentServiceStatus()">Ver estado del servicio</button>
-            <div id="payment-content" style="margin-top:1rem;color:var(--muted);"></div>
-          </div>
-        </div>
-      </div>
-
-      <div id="sec-config" class="section">
-        <div class="section-title">Configuración</div>
-        <div class="card">
-          <h3 style="font-size: 1.1rem; margin-bottom: 1rem;">Gateway URL</h3>
-          <div class="field">
-            <label>URL Base</label>
-            <input id="gw-url-input" value="http://localhost:8002" />
-          </div>
-          <button class="btn btn-primary" onclick="saveGatewayUrl()">Guardar</button>
-        </div>
-      </div>
-    </main>
-  </div>
-
-  <div id="toast"></div>
-
-  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
-
-  <script>
+﻿
     const API_BASE = window.location.origin;
 
     function normalizeRole(roleValue) {
@@ -3432,7 +41,7 @@
     const COURSE_CACHE = new Map();
     const COURSE_TEACHERS_CACHE = new Map();
 
-    const WEEKDAYS_ES = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
+    const WEEKDAYS_ES = ["Domingo", "Lunes", "Martes", "MiÃ©rcoles", "Jueves", "Viernes", "SÃ¡bado"];
 
     function syncSessionState() {
       TOKEN = localStorage.getItem('token') || null;
@@ -3498,29 +107,29 @@
           currentSemester = semester;
           rows.push(`
             <tr class="semester-divider">
-              <td colspan="9">Semestre ${toRomanSemester(c.semester)}${c.semester ? ` · Nivel ${c.semester}` : ''}</td>
+              <td colspan="9">Semestre ${toRomanSemester(c.semester)}${c.semester ? ` Â· Nivel ${c.semester}` : ''}</td>
             </tr>
           `);
         }
 
         const prerequisiteCodes = Array.isArray(c.prerequisite_codes) && c.prerequisite_codes.length
           ? c.prerequisite_codes.join(', ')
-          : '—';
+          : 'â€”';
 
         const cupoLabel = c.max_students
           ? `<span style="font-size:.75rem;background:var(--accent2);color:#fff;border-radius:4px;padding:1px 6px;">${c.max_students}</span>`
-          : '<span style="opacity:.45;font-size:.75rem;">Sin límite</span>';
+          : '<span style="opacity:.45;font-size:.75rem;">Sin lÃ­mite</span>';
 
         rows.push(`
           <tr>
             <td><code style="font-size: .7rem;">${c.id}</code></td>
-            <td>${c.code || '—'}</td>
+            <td>${c.code || 'â€”'}</td>
             <td>${c.name}</td>
-            <td>${c.semester || '—'}</td>
-            <td>${c.credits || '—'}</td>
+            <td>${c.semester || 'â€”'}</td>
+            <td>${c.credits || 'â€”'}</td>
             <td><div class="prereq-list">${prerequisiteCodes}</div></td>
-            <td>${ACADEMIC_CAREERS.find(x => x.id === c.career_id)?.name || c.career_id || '—'}</td>
-            <td>${c.schedule || '—'}</td>
+            <td>${ACADEMIC_CAREERS.find(x => x.id === c.career_id)?.name || c.career_id || 'â€”'}</td>
+            <td>${c.schedule || 'â€”'}</td>
             <td>${cupoLabel}</td>
           </tr>
         `);
@@ -3541,7 +150,7 @@
       return TOKEN ? { Authorization: `Bearer ${TOKEN}` } : {};
     }
 
-    // Interceptor global: cerrar sesión solo cuando el backend indique token inválido/expirado.
+    // Interceptor global: cerrar sesiÃ³n solo cuando el backend indique token invÃ¡lido/expirado.
     const _originalFetch = window.fetch;
     window.fetch = async function(...args) {
       const response = await _originalFetch(...args);
@@ -3564,16 +173,16 @@
         if (!isAuthEndpoint && isTokenIssue) {
           localStorage.removeItem('token');
           localStorage.removeItem('user_role');
-          showToast('⚠ Sesión expirada. Por favor inicia sesión de nuevo.', 'err');
+          showToast('âš  SesiÃ³n expirada. Por favor inicia sesiÃ³n de nuevo.', 'err');
           setTimeout(() => { window.location.href = '/'; }, 2000);
         }
       }
       return response;
     };
 
-    // ══════════════════════════════════════════════════════════════════════
+    // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
     // COMUNICACIONES
-    // ══════════════════════════════════════════════════════════════════════
+    // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
     async function initAnnTeacherCourses() {
       const sel = document.getElementById('ann-teacher-course');
@@ -3582,7 +191,7 @@
       try {
         const r = await fetch(`${API_BASE}/academic/api/courses/`, { headers: getAuthHeaders() });
         const courses = await r.json();
-        sel.innerHTML = '<option value="">— Selecciona un curso —</option>';
+        sel.innerHTML = '<option value="">â€” Selecciona un curso â€”</option>';
         courses.forEach(c => {
           const opt = document.createElement('option');
           opt.value = c.id;
@@ -3598,7 +207,7 @@
       const container = document.getElementById('ann-teacher-list');
       if (!container) return;
       if (!courseId) { container.innerHTML = '<p style="color:var(--muted)">Selecciona un curso.</p>'; return; }
-      container.innerHTML = '<p style="color:var(--muted)">Cargando…</p>';
+      container.innerHTML = '<p style="color:var(--muted)">Cargandoâ€¦</p>';
       try {
         const r = await fetch(`${API_BASE}/grades/announcements?course_id=${courseId}`, { headers: getAuthHeaders() });
         const anns = await r.json();
@@ -3607,9 +216,9 @@
           <div style="background:linear-gradient(135deg, rgba(59,130,246,0.08) 0%, rgba(99,102,241,0.05) 100%);border:2px solid rgba(59,130,246,0.25);border-radius:12px;padding:1.25rem;margin-bottom:1rem;box-shadow:0 2px 8px rgba(29,78,216,0.1);">
             <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:.5rem;">
               <div style="flex:1;">
-                ${a.pinned ? '<span style="background:rgba(29,78,216,0.15);color:var(--accent);font-size:.7rem;font-weight:700;padding:3px 8px;border-radius:4px;display:inline-block;margin-bottom:.5rem;">📌 FIJADO</span><br>' : ''}
+                ${a.pinned ? '<span style="background:rgba(29,78,216,0.15);color:var(--accent);font-size:.7rem;font-weight:700;padding:3px 8px;border-radius:4px;display:inline-block;margin-bottom:.5rem;">ðŸ“Œ FIJADO</span><br>' : ''}
                 <strong style="font-size:1.05rem;color:var(--text);">${escapeHtml(a.title)}</strong>
-                <div style="font-size:.75rem;color:var(--muted);margin-top:.35rem;">📅 ${new Date(a.created_at).toLocaleString('es-CO')}</div>
+                <div style="font-size:.75rem;color:var(--muted);margin-top:.35rem;">ðŸ“… ${new Date(a.created_at).toLocaleString('es-CO')}</div>
               </div>
               <button class="btn btn-secondary btn-sm" style="color:var(--danger);border-color:var(--danger);white-space:nowrap;" onclick="deleteAnnouncement(${a.id})">Eliminar</button>
             </div>
@@ -3632,7 +241,7 @@
       const title = document.getElementById('ann-title').value.trim();
       const body = document.getElementById('ann-body').value.trim();
       const pinned = document.getElementById('ann-pinned').checked;
-      if (!title || !body) { alert('El título y el mensaje son obligatorios.'); return; }
+      if (!title || !body) { alert('El tÃ­tulo y el mensaje son obligatorios.'); return; }
       try {
         const r = await fetch(`${API_BASE}/grades/announcements`, {
           method: 'POST', headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
@@ -3641,16 +250,16 @@
         if (!r.ok) { const e = await r.json(); alert(e.detail || 'Error al publicar el anuncio'); return; }
         document.getElementById('modal-create-ann').style.display = 'none';
         loadTeacherAnnouncements();
-      } catch(e) { alert('Error de conexión al publicar el anuncio.'); }
+      } catch(e) { alert('Error de conexiÃ³n al publicar el anuncio.'); }
     }
 
     async function deleteAnnouncement(annId) {
-      if (!confirm('¿Eliminar este anuncio?')) return;
+      if (!confirm('Â¿Eliminar este anuncio?')) return;
       try {
         const r = await fetch(`${API_BASE}/grades/announcements/${annId}`, { method: 'DELETE', headers: getAuthHeaders() });
         if (!r.ok) { const e = await r.json(); alert(e.detail || 'Error al eliminar'); return; }
         loadTeacherAnnouncements();
-      } catch(e) { alert('Error de conexión al eliminar.'); }
+      } catch(e) { alert('Error de conexiÃ³n al eliminar.'); }
     }
 
     function isCurrentEnrollmentStatus(status) {
@@ -3694,7 +303,7 @@
       if (!sel) return;
       try {
         const courses = await getMyCurrentCourses();
-        sel.innerHTML = '<option value="">— Todos tus cursos —</option>';
+        sel.innerHTML = '<option value="">â€” Todos tus cursos â€”</option>';
         courses.forEach(c => {
           const opt = document.createElement('option');
           opt.value = c.id;
@@ -3717,7 +326,7 @@
       const courseId = document.getElementById('ann-student-course')?.value;
       const container = document.getElementById('ann-student-list');
       if (!container) return;
-      container.innerHTML = '<p style="color:var(--muted)">Cargando…</p>';
+      container.innerHTML = '<p style="color:var(--muted)">Cargandoâ€¦</p>';
       try {
         const endpoint = courseId
           ? `${API_BASE}/grades/announcements?course_id=${courseId}`
@@ -3730,9 +339,9 @@
         }
         container.innerHTML = anns.map(a => `
           <div style="background:linear-gradient(135deg, rgba(59,130,246,0.08) 0%, rgba(99,102,241,0.05) 100%);border:2px solid rgba(59,130,246,0.25);border-radius:12px;padding:1.25rem;margin-bottom:1rem;box-shadow:0 2px 8px rgba(29,78,216,0.1);">
-            ${a.pinned ? '<span style="background:rgba(29,78,216,0.15);color:var(--accent);font-size:.7rem;font-weight:700;padding:3px 8px;border-radius:4px;display:inline-block;margin-bottom:.5rem;">📌 FIJADO</span><br>' : ''}
+            ${a.pinned ? '<span style="background:rgba(29,78,216,0.15);color:var(--accent);font-size:.7rem;font-weight:700;padding:3px 8px;border-radius:4px;display:inline-block;margin-bottom:.5rem;">ðŸ“Œ FIJADO</span><br>' : ''}
             <strong style="font-size:1.05rem;color:var(--text);">${escapeHtml(a.title)}</strong>
-            <div style="font-size:.75rem;color:var(--muted);margin:.35rem 0 .75rem;">📅 ${new Date(a.created_at).toLocaleString('es-CO')}</div>
+            <div style="font-size:.75rem;color:var(--muted);margin:.35rem 0 .75rem;">ðŸ“… ${new Date(a.created_at).toLocaleString('es-CO')}</div>
             <p style="margin:0;white-space:pre-wrap;color:var(--text);line-height:1.6;">${escapeHtml(a.body)}</p>
           </div>`).join('');
       } catch(e) { container.innerHTML = '<p style="color:var(--danger)">Error al cargar anuncios.</p>'; }
@@ -3744,9 +353,9 @@
         .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
     }
 
-    // Convierte "14:00" → "2:00 PM", "07:00" → "7:00 AM"
+    // Convierte "14:00" â†’ "2:00 PM", "07:00" â†’ "7:00 AM"
     function formatTime(t) {
-      if (!t) return '—';
+      if (!t) return 'â€”';
       const [hStr, mStr] = t.split(':');
       let h = parseInt(hStr, 10);
       const m = mStr || '00';
@@ -3755,10 +364,10 @@
       return `${h}:${m} ${period}`;
     }
 
-    // Formatea rango horario: "07:00" "09:00" → "7:00 AM – 9:00 AM"
+    // Formatea rango horario: "07:00" "09:00" â†’ "7:00 AM â€“ 9:00 AM"
     function formatRange(start, end) {
-      if (!start || !end) return '—';
-      return `${formatTime(start)} – ${formatTime(end)}`;
+      if (!start || !end) return 'â€”';
+      return `${formatTime(start)} â€“ ${formatTime(end)}`;
     }
 
     function goTo(section, btn) {
@@ -3767,7 +376,7 @@
       document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
       if (btn) btn.classList.add('active');
       setAcademicAdminTabState(section);
-      // Recordar la última sección visitada
+      // Recordar la Ãºltima secciÃ³n visitada
       localStorage.setItem('last_section', section);
       if (section === 'my-profile') {
         loadMyProfile();
@@ -3826,11 +435,11 @@
       if (!subtitle) return;
 
       if (USER_ROLE === 'admin') {
-        subtitle.textContent = 'Vista ejecutiva para administración académica y operativa';
+        subtitle.textContent = 'Vista ejecutiva para administraciÃ³n acadÃ©mica y operativa';
       } else if (USER_ROLE === 'docente') {
-        subtitle.textContent = 'Accesos rápidos para docencia y seguimiento académico';
+        subtitle.textContent = 'Accesos rÃ¡pidos para docencia y seguimiento acadÃ©mico';
       } else if (USER_ROLE === 'estudiante') {
-        subtitle.textContent = 'Tus servicios personales y estado académico';
+        subtitle.textContent = 'Tus servicios personales y estado acadÃ©mico';
       }
     }
 
@@ -3951,46 +560,46 @@
       if (USER_ROLE !== 'docente') return;
       const tbody = document.getElementById('mis-cursos-tbody');
       if (!tbody) return;
-      tbody.innerHTML = '<tr><td colspan="8"><div class="empty-state"><div class="big">◌</div>Cargando...</div></td></tr>';
+      tbody.innerHTML = '<tr><td colspan="8"><div class="empty-state"><div class="big">â—Œ</div>Cargando...</div></td></tr>';
 
       try {
         const coursesRes = await fetch(`${API_BASE}/academic/api/courses/`, { headers: getAuthHeaders() });
         const courses = coursesRes.ok ? await coursesRes.json() : [];
 
         if (!Array.isArray(courses) || courses.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="8"><div class="empty-state"><div class="big">📭</div>No tienes cursos asignados.</div></td></tr>';
+          tbody.innerHTML = '<tr><td colspan="8"><div class="empty-state"><div class="big">ðŸ“­</div>No tienes cursos asignados.</div></td></tr>';
           return;
         }
 
         // Poblar el select de filtro por curso
         const filterSel = document.getElementById('teacher-course-filter');
         if (filterSel) {
-          filterSel.innerHTML = '<option value="">— Todos mis cursos —</option>' +
-            courses.map(c => `<option value="${c.id}">${c.code} — ${c.name}</option>`).join('');
+          filterSel.innerHTML = '<option value="">â€” Todos mis cursos â€”</option>' +
+            courses.map(c => `<option value="${c.id}">${c.code} â€” ${c.name}</option>`).join('');
         }
 
-        const DAY_ES = { lunes:'Lunes', martes:'Martes', miercoles:'Miércoles', jueves:'Jueves', viernes:'Viernes', sabado:'Sábado' };
+        const DAY_ES = { lunes:'Lunes', martes:'Martes', miercoles:'MiÃ©rcoles', jueves:'Jueves', viernes:'Viernes', sabado:'SÃ¡bado' };
 
         tbody.innerHTML = courses.map(c => {
-          const dia = c.day_of_week ? (DAY_ES[c.day_of_week] || c.day_of_week) : '—';
-          const horario = c.start_time && c.end_time ? formatRange(c.start_time, c.end_time) : (c.schedule || '—');
-          const salon = c.location || '—';
-          const courseName = escapeHtml(`${c.code} — ${c.name}`);
+          const dia = c.day_of_week ? (DAY_ES[c.day_of_week] || c.day_of_week) : 'â€”';
+          const horario = c.start_time && c.end_time ? formatRange(c.start_time, c.end_time) : (c.schedule || 'â€”');
+          const salon = c.location || 'â€”';
+          const courseName = escapeHtml(`${c.code} â€” ${c.name}`);
           return `<tr>
-            <td><code style="font-size:.75rem;color:var(--accent)">${c.code || '—'}</code></td>
-            <td>${c.name || '—'}</td>
-            <td><button class="btn btn-secondary btn-sm" onclick="openCourseStudents(${c.id}, '${courseName}')">👥 Ver lista</button></td>
-            <td>${c.semester ?? '—'}</td>
-            <td>${c.credits ?? '—'}</td>
+            <td><code style="font-size:.75rem;color:var(--accent)">${c.code || 'â€”'}</code></td>
+            <td>${c.name || 'â€”'}</td>
+            <td><button class="btn btn-secondary btn-sm" onclick="openCourseStudents(${c.id}, '${courseName}')">ðŸ‘¥ Ver lista</button></td>
+            <td>${c.semester ?? 'â€”'}</td>
+            <td>${c.credits ?? 'â€”'}</td>
             <td>${dia}</td>
             <td>${horario}</td>
             <td>${salon}</td>
           </tr>`;
         }).join('');
 
-        // Cargar estudiantes automáticamente al tener los cursos — eliminado
+        // Cargar estudiantes automÃ¡ticamente al tener los cursos â€” eliminado
       } catch (e) {
-        tbody.innerHTML = '<tr><td colspan="8"><div class="empty-state"><div class="big">⚠</div>Error al cargar cursos.</div></td></tr>';
+        tbody.innerHTML = '<tr><td colspan="8"><div class="empty-state"><div class="big">âš </div>Error al cargar cursos.</div></td></tr>';
       }
     }
 
@@ -3999,8 +608,8 @@
       const title = document.getElementById('modal-course-students-title');
       const body  = document.getElementById('modal-course-students-body');
 
-      title.textContent = `Estudiantes — ${courseLabel}`;
-      body.innerHTML = '<div class="empty-state"><div class="big">◌</div>Cargando...</div>';
+      title.textContent = `Estudiantes â€” ${courseLabel}`;
+      body.innerHTML = '<div class="empty-state"><div class="big">â—Œ</div>Cargando...</div>';
       modal.style.display = 'flex';
 
       try {
@@ -4011,7 +620,7 @@
         const enrs = Array.isArray(raw) ? raw : (raw.value || raw.enrollments || []);
 
         if (!enrs.length) {
-          body.innerHTML = '<div class="empty-state"><div class="big">📭</div>No hay estudiantes matriculados en este curso.</div>';
+          body.innerHTML = '<div class="empty-state"><div class="big">ðŸ“­</div>No hay estudiantes matriculados en este curso.</div>';
           return;
         }
 
@@ -4020,11 +629,11 @@
         const rows = enrs.map((e, i) => {
           const s = students[i];
           const nombre = s ? `${s.nombre || ''} ${s.apellido || ''}`.trim() || s.email : `ID ${e.student_id}`;
-          const email  = s?.email || '—';
-          const doc    = s?.document_id || '—';
+          const email  = s?.email || 'â€”';
+          const doc    = s?.document_id || 'â€”';
           const estado = e.status === 'activa' || e.status === 'active'
             ? `<span class="badge badge-activo">${e.status}</span>`
-            : `<span class="badge">${e.status || '—'}</span>`;
+            : `<span class="badge">${e.status || 'â€”'}</span>`;
           return `<tr>
             <td><code style="font-size:.72rem;color:var(--accent)">${escapeHtml(doc)}</code></td>
             <td>${escapeHtml(nombre)}</td>
@@ -4037,12 +646,12 @@
           <p style="color:var(--muted);font-size:.85rem;margin-bottom:.75rem;">${enrs.length} estudiante${enrs.length !== 1 ? 's' : ''} matriculado${enrs.length !== 1 ? 's' : ''}</p>
           <div class="table-wrap">
             <table>
-              <thead><tr><th>Cédula</th><th>Nombre</th><th>Correo</th><th>Estado</th></tr></thead>
+              <thead><tr><th>CÃ©dula</th><th>Nombre</th><th>Correo</th><th>Estado</th></tr></thead>
               <tbody>${rows}</tbody>
             </table>
           </div>`;
       } catch {
-        body.innerHTML = '<div class="empty-state"><div class="big">⚠</div>Error al cargar estudiantes.</div>';
+        body.innerHTML = '<div class="empty-state"><div class="big">âš </div>Error al cargar estudiantes.</div>';
       }
     }
 
@@ -4086,7 +695,7 @@
       const enrollments = await parseJson(requests[0], []);
       const enrolledCourses = await parseJson(requests[1], { courses: [] });
       const grades = await parseJson(requests[2], []);
-      const average = await parseJson(requests[3], { average: '—' });
+      const average = await parseJson(requests[3], { average: 'â€”' });
       const financial = await parseJson(requests[4], null);
 
       const currentEnrollments = Array.isArray(enrollments)
@@ -4099,10 +708,10 @@
         : USER_EMAIL || 'Estudiante';
 
       setText('student-dashboard-name', studentName);
-      setText('student-dashboard-average', average?.average ?? '—');
+      setText('student-dashboard-average', average?.average ?? 'â€”');
       setText('student-dashboard-courses', String(currentCourses.length));
       setText('student-dashboard-grades', String(Array.isArray(grades) ? grades.length : 0));
-      setText('student-dashboard-balance', financial ? `${financial.balance ?? 0}` : '—');
+      setText('student-dashboard-balance', financial ? `${financial.balance ?? 0}` : 'â€”');
       setText('student-dashboard-financial-status', financial?.status || 'Sin datos');
       setText('student-kpi-document', MY_STUDENT?.document_id || 'Sin doc');
       setText('student-kpi-enrollments', String(currentEnrollments.length));
@@ -4207,7 +816,7 @@
       const teachers = await fetchCourseTeachers(enrollment.course_id);
 
       const courseLabel = course
-        ? `${course.code ? `${course.code} — ` : ''}${course.name || `Curso ${enrollment.course_id}`}`
+        ? `${course.code ? `${course.code} â€” ` : ''}${course.name || `Curso ${enrollment.course_id}`}`
         : `Curso ${enrollment.course_id}`;
 
       const scheduleLabel = selectedSession?.day_of_week && selectedSession?.start_time && selectedSession?.end_time
@@ -4240,7 +849,7 @@
       if (!tbody) return;
 
       if (!Array.isArray(enrollments) || enrollments.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="4"><div class="empty-state"><div class="big">📭</div>No tienes materias inscritas</div></td></tr>';
+        tbody.innerHTML = '<tr><td colspan="4"><div class="empty-state"><div class="big">ðŸ“­</div>No tienes materias inscritas</div></td></tr>';
         return;
       }
 
@@ -4265,7 +874,7 @@
         document.getElementById('student-program-text').textContent = `Programa: ${MY_STUDENT.program || 'Sin programa'}`;
         setUserInfo();
       } catch (e) {
-        showToast('✗ No se encontró el perfil de estudiante', 'err');
+        showToast('âœ— No se encontrÃ³ el perfil de estudiante', 'err');
       }
     }
 
@@ -4276,7 +885,7 @@
       if (MY_STUDENT?.nombre) {
         label = `${MY_STUDENT.nombre} ${MY_STUDENT.apellido || ''}`.trim();
       }
-      const roleEmoji = USER_ROLE === 'admin' ? '🛡' : USER_ROLE === 'docente' ? '👩‍🏫' : '🎓';
+      const roleEmoji = USER_ROLE === 'admin' ? 'ðŸ›¡' : USER_ROLE === 'docente' ? 'ðŸ‘©â€ðŸ«' : 'ðŸŽ“';
       const roleText = USER_ROLE ? USER_ROLE : 'desconocido';
       badge.innerHTML = `${roleEmoji} <span class="user-badge-name">${escapeHtml(label)}</span> <span class="user-badge-role">(${escapeHtml(roleText)})</span>`;
       badge.classList.add('visible');
@@ -4293,13 +902,13 @@
                      teacher.name || USER_EMAIL;
         const badge = document.getElementById('user-badge');
         if (badge && name) {
-          badge.innerHTML = `👩‍🏫 <span class="user-badge-name">${escapeHtml(name)}</span> <span class="user-badge-role">(docente)</span>`;
+          badge.innerHTML = `ðŸ‘©â€ðŸ« <span class="user-badge-name">${escapeHtml(name)}</span> <span class="user-badge-role">(docente)</span>`;
           badge.classList.add('visible');
         }
       } catch { /* usa el email como fallback */ }
     }
 
-    // ── MATRICULACIÓN DE MATERIAS (Estudiante) ──────────────────────
+    // â”€â”€ MATRICULACIÃ“N DE MATERIAS (Estudiante) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     let ENROLLMENT_CART = {};  // { courseId: { courseData, sectionId } }
     let COMPLETED_COURSES = {};  // { courseId: true }
     let MY_CAREER_ID = null;  // Para guardar la carrera del estudiante
@@ -4318,6 +927,7 @@
     const ACTIVE_PENDING_PAYMENT_REF_KEY = 'sgau_pending_enrollment_active_payment_ref';
     let PENDING_ENROLLMENT_ORDER = null;
     let PAYMENT_HISTORY_CACHE = [];
+    const WOMPI_TEST_CHECKOUT_URL = 'https://checkout.wompi.co/l/test_VPOS_ZTf5ZN';
 
     function hasCompletedCourseCode(code) {
       const targetCode = normalizeText(code);
@@ -4337,7 +947,7 @@
 
         const courseId = Number(btn.dataset.courseId || 0);
         if (!courseId) {
-          showToast('✗ No se pudo identificar la materia seleccionada', 'err');
+          showToast('âœ— No se pudo identificar la materia seleccionada', 'err');
           return;
         }
         selectCourseForEnrollmentById(courseId);
@@ -4402,7 +1012,7 @@
             start_time: course.start_time,
             end_time: course.end_time,
             classroom: course.location || 'Por definir',
-            section: 'Única',
+            section: 'Ãšnica',
             modality: course.modality || null,
             isFallback: true,
           }];
@@ -4444,7 +1054,7 @@
             <td>${teacherLabel}</td>
             <td>
               <button class="btn btn-sm ${selected ? 'btn-accent' : 'btn-secondary'}" onclick="confirmCourseSectionSelection('${String(session.id).replace(/'/g, "\\'")}')">
-                ${selected ? '✓ Seleccionada' : 'Elegir'}
+                ${selected ? 'âœ“ Seleccionada' : 'Elegir'}
               </button>
             </td>
           </tr>
@@ -4459,7 +1069,7 @@
 
       const session = ENROLLMENT_SECTION_OPTIONS.get(String(sessionId));
       if (!session) {
-        showToast('✗ No se encontró la clase seleccionada', 'err');
+        showToast('âœ— No se encontrÃ³ la clase seleccionada', 'err');
         return;
       }
 
@@ -4491,13 +1101,13 @@
     function selectCourseSectionInline(courseId, sessionId) {
       const context = INLINE_SECTION_CONTEXT.get(String(courseId));
       if (!context) {
-        showToast('✗ No se encontró el contexto de clases. Vuelve a cargar.', 'err');
+        showToast('âœ— No se encontrÃ³ el contexto de clases. Vuelve a cargar.', 'err');
         return;
       }
 
       const session = context.sessionsMap.get(String(sessionId));
       if (!session) {
-        showToast('✗ No se encontró la clase seleccionada', 'err');
+        showToast('âœ— No se encontrÃ³ la clase seleccionada', 'err');
         return;
       }
 
@@ -4521,7 +1131,7 @@
         teacherLabel,
       };
 
-      showToast(`✓ Clase ${session.section || session.id} elegida para ${course.code}`, 'ok');
+      showToast(`âœ“ Clase ${session.section || session.id} elegida para ${course.code}`, 'ok');
       updateEnrollmentCart();
       loadEnrollmentSemester(parseInt(document.querySelector('[id^="sem-tab-"].active')?.id.split('-')[2] || '1'));
     }
@@ -4530,7 +1140,7 @@
       const container = document.getElementById(`course-sections-inline-${courseId}`);
       const course = ENROLLMENT_COURSE_INDEX.get(Number(courseId));
       if (!container || !course) {
-        showToast('✗ No se encontró la materia seleccionada', 'err');
+        showToast('âœ— No se encontrÃ³ la materia seleccionada', 'err');
         return;
       }
 
@@ -4553,7 +1163,7 @@
           start_time: course.start_time,
           end_time: course.end_time,
           classroom: course.location || 'Por definir',
-          section: 'Única',
+          section: 'Ãšnica',
           modality: course.modality || null,
           isFallback: true,
         }];
@@ -4586,7 +1196,7 @@
             <div>${session.start_time && session.end_time ? formatRange(session.start_time, session.end_time) : '-'}</div>
             <button class="btn btn-sm btn-secondary" onclick="selectCourseSectionInline(${course.id}, '${sid}')">Elegir</button>
           </div>
-          <div style="font-size:.75rem;color:var(--muted);margin:-.2rem 0 .3rem .2rem;">Aula: ${session.classroom || '-'} · Docente: ${teacherLabel}</div>
+          <div style="font-size:.75rem;color:var(--muted);margin:-.2rem 0 .3rem .2rem;">Aula: ${session.classroom || '-'} Â· Docente: ${teacherLabel}</div>
         `;
       }).join('');
     }
@@ -4611,7 +1221,7 @@
       });
 
       if (!myCareerInfo) {
-        document.getElementById('enrollment-content').innerHTML = '<div class="empty-state"><div class="big">⚠</div>No se encontró carrera</div>';
+        document.getElementById('enrollment-content').innerHTML = '<div class="empty-state"><div class="big">âš </div>No se encontrÃ³ carrera</div>';
         return;
       }
 
@@ -4671,7 +1281,7 @@
           const preqsMet = !hasPrereqs || course.prerequisite_codes.every(code => hasCompletedCourseCode(code));
           const isBlocked = hasPrereqs && !preqsMet;
           const isSelected = ENROLLMENT_CART[course.id];
-          const statusText = isCompleted ? '✓ Cursado' : isBlocked ? 'Bloqueado' : isSelected ? 'Clase elegida' : 'Disponible';
+          const statusText = isCompleted ? 'âœ“ Cursado' : isBlocked ? 'Bloqueado' : isSelected ? 'Clase elegida' : 'Disponible';
           const statusClass = isCompleted ? 'completed' : isBlocked ? 'blocked' : isSelected ? 'selected' : 'available';
           const selectedSection = isSelected?.sectionLabel
             ? `<div class="enrollment-selected-section">Clase elegida: ${isSelected.sectionLabel}</div>`
@@ -4685,7 +1295,7 @@
               </div>
               <div class="enrollment-course-name">${course.name}</div>
               <div class="enrollment-course-meta">
-                <span>💳 ${course.credits} créditos</span>
+                <span>ðŸ’³ ${course.credits} crÃ©ditos</span>
                 ${isBlocked ? `<span class="enrollment-prereq" title="${course.prerequisite_codes.join(', ')}">Requiere: ${course.prerequisite_codes.join(', ')}</span>` : ''}
               </div>
               ${selectedSection}
@@ -4705,7 +1315,7 @@
         document.getElementById('enrollment-content').innerHTML = html;
       } catch (e) {
         console.error(e);
-        document.getElementById('enrollment-content').innerHTML = '<div style="color:var(--danger);">✗ Error cargando cursos</div>';
+        document.getElementById('enrollment-content').innerHTML = '<div style="color:var(--danger);">âœ— Error cargando cursos</div>';
       }
     }
 
@@ -4723,7 +1333,7 @@
         const modal = document.getElementById('modal-course-sections');
         if (tbody) {
           const isTimeout = error?.name === 'AbortError';
-          tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--danger);">${isTimeout ? 'La consulta de clases tardó demasiado. Verifica que academic_service esté activo.' : 'No se pudieron cargar las clases disponibles.'}</td></tr>`;
+          tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--danger);">${isTimeout ? 'La consulta de clases tardÃ³ demasiado. Verifica que academic_service estÃ© activo.' : 'No se pudieron cargar las clases disponibles.'}</td></tr>`;
         }
         if (modal) modal.style.display = 'flex';
       }
@@ -4738,7 +1348,7 @@
 
       // Validaciones y advertencias
       let warnings = [];
-      // Repetidos (no debería ocurrir, pero por si acaso)
+      // Repetidos (no deberÃ­a ocurrir, pero por si acaso)
       const codes = cart.map(c => c.code);
       const repeated = codes.filter((v, i, a) => a.indexOf(v) !== i);
       if (repeated.length > 0) warnings.push('Hay materias repetidas en el carrito.');
@@ -4751,7 +1361,7 @@
         }
       }
 
-      // Cruces de horario (si hay dos materias con traslape de día y hora)
+      // Cruces de horario (si hay dos materias con traslape de dÃ­a y hora)
       for (let i = 0; i < cart.length; i++) {
         const a = cart[i];
         if (!a.day_of_week || !a.start_time || !a.end_time) continue;
@@ -4785,16 +1395,16 @@
         <div style="display:flex;justify-content:space-between;align-items:center;padding:0.5rem;background:var(--bg);border-radius:4px;margin-bottom:0.25rem;">
           <div style="flex:1;">
             <div style="font-weight:500;font-size:0.9rem;">${c.code} - ${c.name}</div>
-            <div style="font-size:0.75rem;color:var(--muted);">${c.credits} créditos · ${c.sectionLabel || 'Sin clase elegida'}</div>
-            <div style="font-size:0.75rem;color:var(--muted);">${c.day_of_week && c.start_time && c.end_time ? `${c.day_of_week} ${formatRange(c.start_time, c.end_time)}` : 'Horario por definir'}${c.classroom ? ` · ${c.classroom}` : ''}</div>
+            <div style="font-size:0.75rem;color:var(--muted);">${c.credits} crÃ©ditos Â· ${c.sectionLabel || 'Sin clase elegida'}</div>
+            <div style="font-size:0.75rem;color:var(--muted);">${c.day_of_week && c.start_time && c.end_time ? `${c.day_of_week} ${formatRange(c.start_time, c.end_time)}` : 'Horario por definir'}${c.classroom ? ` Â· ${c.classroom}` : ''}</div>
           </div>
-          <button class="btn btn-sm btn-danger" title="Quitar" onclick="deleteEnrollmentItem(${c.courseId})">✕</button>
+          <button class="btn btn-sm btn-danger" title="Quitar" onclick="deleteEnrollmentItem(${c.courseId})">âœ•</button>
         </div>
       `).join('');
 
       totalEl.textContent = `$${totalCost.toLocaleString('es-CO')}`;
       summaryEl.innerHTML = `
-        <div style="font-weight:500;">${totalCredits} créditos</div>
+        <div style="font-weight:500;">${totalCredits} crÃ©ditos</div>
         <div style="font-size:0.75rem;color:var(--muted);">${cart.length} materias seleccionadas</div>
       `;
 
@@ -4827,7 +1437,7 @@
           }
         }
 
-        // Compatibilidad con versión anterior (un único pedido)
+        // Compatibilidad con versiÃ³n anterior (un Ãºnico pedido)
         const rawSingle = localStorage.getItem(PENDING_ENROLLMENT_STORAGE_KEY);
         if (rawSingle) {
           const single = JSON.parse(rawSingle);
@@ -4897,23 +1507,6 @@
       }
     }
 
-    function clearAllPendingEnrollmentLocalState() {
-      const confirmed = window.confirm('Esto limpiara la factura pendiente local de este navegador. Deseas continuar?');
-      if (!confirmed) return;
-
-      localStorage.removeItem(PENDING_ENROLLMENT_HISTORY_KEY);
-      localStorage.removeItem(PENDING_ENROLLMENT_STORAGE_KEY);
-      localStorage.removeItem(ACTIVE_PENDING_INVOICE_KEY);
-      setActiveEnrollmentPaymentReference(null);
-      PENDING_ENROLLMENT_ORDER = null;
-
-      const resultArea = document.getElementById('pay-result-area');
-      if (resultArea) resultArea.innerHTML = '';
-      prefillPaymentFromPendingEnrollment();
-      loadPaymentHistory();
-      showToast('Factura pendiente local eliminada', 'ok');
-    }
-
     function switchPendingEnrollmentOrder(invoiceId) {
       const orders = loadPendingEnrollmentOrders();
       const selected = orders.find(o => o.invoiceId === invoiceId);
@@ -4921,10 +1514,7 @@
       PENDING_ENROLLMENT_ORDER = selected;
       localStorage.setItem(ACTIVE_PENDING_INVOICE_KEY, invoiceId);
       if (selected.payment_reference) {
-        setActiveEnrollmentPaymentReference(selected.payment_reference);
-      } else {
-        // Evita mezclar una factura nueva con una referencia vieja de otro pedido.
-        setActiveEnrollmentPaymentReference(null);
+        localStorage.setItem(ACTIVE_PENDING_PAYMENT_REF_KEY, selected.payment_reference);
       }
       prefillPaymentFromPendingEnrollment();
     }
@@ -4935,59 +1525,19 @@
       return match ? match[0].toUpperCase() : null;
     }
 
-    function normalizePaymentStatus(status) {
-      const raw = String(status || '').trim().toLowerCase();
-      const map = {
-        approved: 'aprobado',
-        paid: 'aprobado',
-        aprobado: 'aprobado',
-        pending: 'pendiente',
-        pending_payment: 'pendiente',
-        awaiting_payment: 'pendiente',
-        pendiente: 'pendiente',
-        rejected: 'rechazado',
-        rechazado: 'rechazado',
-        expired: 'expirado',
-        expirado: 'expirado',
-      };
-      return map[raw] || raw;
-    }
-
-    function buildWompiCheckoutUrlFromLinkId(linkId) {
-      const id = String(linkId || '').trim();
-      if (!id) return null;
-      return `https://checkout.wompi.co/l/${id}`;
-    }
-
     function getPendingEnrollmentPaymentsFromHistory() {
-      const pendingRows = (PAYMENT_HISTORY_CACHE || [])
-        .filter(p => normalizePaymentStatus(p?.status) === 'pendiente')
+      return (PAYMENT_HISTORY_CACHE || [])
+        .filter(p => String(p?.status || '').toLowerCase() === 'pendiente')
         .filter(p => /fac-mat-/i.test(String(p?.concept || '')))
         .map(p => ({
           reference: p.reference,
           concept: p.concept || '',
           invoiceId: extractInvoiceIdFromConcept(p.concept) || `FAC-HIST-${String(p.reference || '').slice(-6)}`,
           amount: Number(p.amount || 0),
-          checkout_url: (isValidWompiCheckoutUrl(p.checkout_url) ? p.checkout_url : (buildWompiCheckoutUrlFromLinkId(p.wompi_payment_link_id) || null)),
-          wompi_link_id: p.wompi_payment_link_id || null,
+          checkout_url: p.checkout_url || null,
           created_at: p.created_at || null,
           status: p.status || 'pendiente',
         }));
-
-      // Una sola opcion por factura: conservar la referencia mas reciente.
-      const latestByInvoice = new Map();
-      pendingRows.forEach(row => {
-        const key = String(row.invoiceId || row.reference || '');
-        const prev = latestByInvoice.get(key);
-        const prevTs = prev?.created_at ? new Date(prev.created_at).getTime() : 0;
-        const curTs = row?.created_at ? new Date(row.created_at).getTime() : 0;
-        if (!prev || curTs >= prevTs) {
-          latestByInvoice.set(key, row);
-        }
-      });
-
-      return Array.from(latestByInvoice.values())
-        .sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
     }
 
     function getActiveEnrollmentPaymentReference() {
@@ -5008,9 +1558,6 @@
       if (byRef?.invoiceId) {
         localStorage.setItem(ACTIVE_PENDING_INVOICE_KEY, byRef.invoiceId);
         PENDING_ENROLLMENT_ORDER = byRef;
-      } else {
-        // Si el pago viene solo del historial, limpiar pedido local activo para no mezclar vistas.
-        PENDING_ENROLLMENT_ORDER = null;
       }
       prefillPaymentFromPendingEnrollment();
     }
@@ -5128,42 +1675,26 @@
       return typeof url === 'string' && /^https:\/\/checkout\.wompi\.co\/l\//i.test(url.trim());
     }
 
-    async function resolveEnrollmentCheckoutUrl(referenceOverride = null, checkoutUrlOverride = null) {
-      if (isValidWompiCheckoutUrl(checkoutUrlOverride)) {
-        return checkoutUrlOverride;
-      }
-
+    async function resolveEnrollmentCheckoutUrl() {
       const order = loadPendingEnrollmentOrder();
       const pendingHistory = getPendingEnrollmentPaymentsFromHistory();
-      const activeRef = referenceOverride || getActiveEnrollmentPaymentReference() || order?.payment_reference || null;
+      const activeRef = getActiveEnrollmentPaymentReference() || order?.payment_reference || null;
       const selectedHistory = activeRef ? pendingHistory.find(p => p.reference === activeRef) : null;
-      const selectedFromCache = activeRef
-        ? (PAYMENT_HISTORY_CACHE || []).find(p => String(p?.reference || '') === String(activeRef))
-        : null;
 
       if (selectedHistory?.checkout_url && isValidWompiCheckoutUrl(selectedHistory.checkout_url)) {
         return selectedHistory.checkout_url;
-      }
-
-      if (selectedFromCache?.checkout_url && isValidWompiCheckoutUrl(selectedFromCache.checkout_url)) {
-        return selectedFromCache.checkout_url;
-      }
-
-      const selectedFromCacheByLinkId = buildWompiCheckoutUrlFromLinkId(selectedFromCache?.wompi_payment_link_id);
-      if (selectedFromCacheByLinkId && isValidWompiCheckoutUrl(selectedFromCacheByLinkId)) {
-        return selectedFromCacheByLinkId;
       }
 
       if (order?.checkout_url && isValidWompiCheckoutUrl(order.checkout_url)) {
         return order.checkout_url;
       }
 
-      if (!activeRef) return null;
+      if (!activeRef) return WOMPI_TEST_CHECKOUT_URL;
 
       const res = await fetch(`${API_BASE}/payments/status/${encodeURIComponent(activeRef)}`, {
         headers: getAuthHeaders(),
       });
-      if (!res.ok) return null;
+      if (!res.ok) return WOMPI_TEST_CHECKOUT_URL;
 
       const data = await res.json().catch(() => ({}));
       const checkoutUrl = data.checkout_url || null;
@@ -5174,13 +1705,13 @@
         }
         return checkoutUrl;
       }
-      return null;
+      return WOMPI_TEST_CHECKOUT_URL;
     }
 
-    async function openEnrollmentCheckout(referenceOverride = null, checkoutUrlOverride = null) {
-      const checkoutUrl = await resolveEnrollmentCheckoutUrl(referenceOverride, checkoutUrlOverride);
+    async function openEnrollmentCheckout() {
+      const checkoutUrl = await resolveEnrollmentCheckoutUrl();
       if (!checkoutUrl) {
-        showToast('No hay checkout válido para esta factura. Pulsa "Pagar ahora" para generar un checkout real.', 'warn');
+        showToast('No se encontrÃ³ un checkout vÃ¡lido. Primero verifica el pago.', 'warn');
         return;
       }
       window.open(checkoutUrl, '_blank', 'noopener,noreferrer');
@@ -5189,25 +1720,10 @@
     function prefillPaymentFromPendingEnrollment() {
       const order = loadPendingEnrollmentOrder();
       const pendingHistory = getPendingEnrollmentPaymentsFromHistory();
-      const activeRefStored = getActiveEnrollmentPaymentReference();
-
-      // Si hay pedido activo, no reutilizar una referencia vieja cuando el pedido aun no tiene una propia.
-      const activeRef = order
-        ? (order.payment_reference || null)
-        : (activeRefStored || null);
-      let selectedHistory = activeRef
+      const activeRef = getActiveEnrollmentPaymentReference();
+      const selectedHistory = activeRef
         ? pendingHistory.find(p => String(p.reference) === String(activeRef))
-        : null;
-
-      // Si hay pedido activo sin referencia, intentar casar por invoiceId.
-      if (!selectedHistory && order?.invoiceId) {
-        selectedHistory = pendingHistory.find(p => String(p.invoiceId || '') === String(order.invoiceId)) || null;
-      }
-
-      // Solo cuando no hay pedido activo, tomar el primero del historial.
-      if (!selectedHistory && !order) {
-        selectedHistory = pendingHistory[0] || null;
-      }
+        : (pendingHistory[0] || null);
 
       if (selectedHistory?.reference) {
         setActiveEnrollmentPaymentReference(selectedHistory.reference);
@@ -5231,12 +1747,7 @@
         return;
       }
 
-      const itemNames = Array.isArray(orderView.items)
-        ? orderView.items
-            .map(item => String(item?.name || item?.code || '').trim())
-            .filter(Boolean)
-        : [];
-      const itemNamesLabel = itemNames.length ? itemNames.join(', ') : '-';
+      const orders = loadPendingEnrollmentOrders().filter(o => o.status !== 'enrolled');
 
       const amountInput = document.getElementById('pay-amount');
       if (amountInput) amountInput.value = String((selectedHistory?.amount ?? orderView.totalCost) || 0);
@@ -5260,7 +1771,7 @@
           ? `<button class="btn btn-secondary btn-sm" onclick="verifyEnrollmentCheckoutPayment('${activeReference}')">Verificar pago</button>`
           : '';
         const openBtn = activeReference
-          ? `<button class="btn btn-primary btn-sm" onclick="openEnrollmentCheckout('${activeReference}')">Abrir checkout</button>`
+          ? `<button class="btn btn-primary btn-sm" onclick="openEnrollmentCheckout()">Abrir checkout</button>`
           : '';
         resultArea.innerHTML = `
           <div style="background:rgba(29,78,216,.08);border:1px solid rgba(29,78,216,.2);border-radius:10px;padding:.8rem;">
@@ -5268,12 +1779,18 @@
             <div style="margin-bottom:.55rem;">
               <label style="font-size:.78rem;color:var(--muted);display:block;margin-bottom:.25rem;">Seleccionar factura pendiente</label>
               <select style="width:100%;max-width:520px;" onchange="switchPendingEnrollmentPayment(this.value)">
-                ${pendingHistory.map(p => `<option value="${p.reference}" ${String(p.reference) === String(activeReference) ? 'selected' : ''}>${p.invoiceId} · $${(p.amount || 0).toLocaleString('es-CO')} · ${new Date(p.created_at || Date.now()).toLocaleDateString('es-CO')}</option>`).join('')}
+                ${pendingHistory.map(p => `<option value="${p.reference}" ${String(p.reference) === String(activeReference) ? 'selected' : ''}>${p.invoiceId} Â· $${(p.amount || 0).toLocaleString('es-CO')} Â· ${new Date(p.created_at || Date.now()).toLocaleDateString('es-CO')}</option>`).join('')}
+              </select>
+            </div>` : ''}
+            ${orders.length > 1 ? `
+            <div style="margin-bottom:.55rem;">
+              <label style="font-size:.78rem;color:var(--muted);display:block;margin-bottom:.25rem;">Factura activa</label>
+              <select style="width:100%;max-width:420px;" onchange="switchPendingEnrollmentOrder(this.value)">
+                ${orders.map(o => `<option value="${o.invoiceId}" ${o.invoiceId === orderView.invoiceId ? 'selected' : ''}>${o.invoiceId} Â· $${(o.totalCost || 0).toLocaleString('es-CO')} Â· ${(o.status || 'pending')}</option>`).join('')}
               </select>
             </div>` : ''}
             <div style="font-weight:600;color:var(--accent2);">Factura pendiente: ${orderView.invoiceId}</div>
-            <div style="font-size:.85rem;color:var(--muted);margin-top:.2rem;">${orderView.items.length || '-'} materias · ${orderView.totalCredits || '-'} creditos · $${(selectedHistory?.amount ?? orderView.totalCost ?? 0).toLocaleString('es-CO')} COP</div>
-            <div style="font-size:.82rem;color:var(--muted);margin-top:.2rem;">Materia(s): ${itemNamesLabel}</div>
+            <div style="font-size:.85rem;color:var(--muted);margin-top:.2rem;">${orderView.items.length || '-'} materias Â· ${orderView.totalCredits || '-'} creditos Â· $${(selectedHistory?.amount ?? orderView.totalCost || 0).toLocaleString('es-CO')} COP</div>
             <div style="font-size:.78rem;color:var(--muted);margin-top:.25rem;">Despues del pago aprobado, la matricula se activa automaticamente.</div>
             <div style="display:flex;gap:.45rem;flex-wrap:wrap;margin-top:.6rem;">
               <button class="btn btn-secondary btn-sm" onclick="downloadEnrollmentInvoicePdf()">Descargar PDF</button>
@@ -5285,105 +1802,17 @@
       }
     }
 
-    function hasTimeOverlap(startA, endA, startB, endB) {
-      return startA < endB && startB < endA;
-    }
-
-    function normalizeDayToken(day) {
-      return normalizeText(day || '').replace(/\s+/g, '');
-    }
-
-    async function resolveEnrollmentScheduleSlot(enrollment) {
-      const course = await fetchCourse(enrollment.course_id);
-      let day = null;
-      let start = null;
-      let end = null;
-
-      try {
-        const sessions = await fetchCourseSessions(enrollment.course_id);
-        const selectedSession = (sessions || []).find(s => Number(s.id) === Number(enrollment.section_id));
-        if (selectedSession?.day_of_week && selectedSession?.start_time && selectedSession?.end_time) {
-          day = selectedSession.day_of_week;
-          start = selectedSession.start_time;
-          end = selectedSession.end_time;
-        }
-      } catch {
-        // fallback a horario del curso
-      }
-
-      if ((!day || !start || !end) && course?.day_of_week && course?.start_time && course?.end_time) {
-        day = course.day_of_week;
-        start = course.start_time;
-        end = course.end_time;
-      }
-
-      return {
-        course_id: enrollment.course_id,
-        code: course?.code || `CUR-${enrollment.course_id}`,
-        day_of_week: day,
-        start_time: start,
-        end_time: end,
-      };
-    }
-
-    async function validateEnrollmentCartBeforePayment(cart) {
-      const warnings = [];
-
-      const res = await fetch(`${API_BASE}/enrollments/me`, { headers: getAuthHeaders() });
-      if (!res.ok) {
-        return {
-          ok: false,
-          warnings: ['No se pudo validar la matrícula con tus materias actuales. Intenta nuevamente antes de pagar.'],
-        };
-      }
-
-      const enrollments = await res.json().catch(() => []);
-      const currentEnrollments = Array.isArray(enrollments)
-        ? enrollments.filter(e => isCurrentEnrollmentStatus(e?.status))
-        : [];
-
-      const currentByCourseId = new Set(currentEnrollments.map(e => Number(e.course_id)));
-      cart.forEach(item => {
-        if (currentByCourseId.has(Number(item.courseId))) {
-          warnings.push(`Ya tienes inscrita la materia ${item.code}.`);
-        }
-      });
-
-      const currentSlots = await Promise.all(currentEnrollments.map(resolveEnrollmentScheduleSlot));
-      cart.forEach(item => {
-        const cartDay = normalizeDayToken(item.day_of_week);
-        const cartStart = timeToMinutes(item.start_time);
-        const cartEnd = timeToMinutes(item.end_time);
-        if (!cartDay || cartStart == null || cartEnd == null) return;
-
-        currentSlots.forEach(slot => {
-          const slotDay = normalizeDayToken(slot.day_of_week);
-          const slotStart = timeToMinutes(slot.start_time);
-          const slotEnd = timeToMinutes(slot.end_time);
-          if (!slotDay || slotStart == null || slotEnd == null) return;
-          if (cartDay !== slotDay) return;
-          if (!hasTimeOverlap(cartStart, cartEnd, slotStart, slotEnd)) return;
-
-          warnings.push(
-            `Conflicto de horario: '${item.code}' (${item.day_of_week} ${item.start_time}-${item.end_time}) se cruza con '${slot.code}' (${slot.day_of_week} ${slot.start_time}-${slot.end_time}).`
-          );
-        });
-      });
-
-      return { ok: true, warnings };
-    }
-
     async function submitEnrollment() {
       const cart = Object.values(ENROLLMENT_CART);
       if (cart.length === 0) {
-        showToast('⚠ Selecciona al menos un curso', 'warn');
+        showToast('âš  Selecciona al menos un curso', 'warn');
         return;
       }
       if (cart.some(c => c.requiresConcreteSection && !c.sectionId)) {
-        showToast('⚠ Debes elegir una clase para cada materia antes de confirmar', 'warn');
+        showToast('âš  Debes elegir una clase para cada materia antes de confirmar', 'warn');
         return;
       }
-      // Validación previa
+      // ValidaciÃ³n previa
       let warnings = [];
       const codes = cart.map(c => c.code);
       const repeated = codes.filter((v, i, a) => a.indexOf(v) !== i);
@@ -5411,17 +1840,8 @@
           }
         }
       }
-
-      // Validación fuerte contra materias actualmente inscritas antes de permitir pago.
-      const externalValidation = await validateEnrollmentCartBeforePayment(cart);
-      if (!externalValidation.ok) {
-        showToast(`⚠ ${externalValidation.warnings.join('\n')}`, 'warn');
-        return;
-      }
-      warnings.push(...externalValidation.warnings);
-
       if (warnings.length > 0) {
-        showToast('⚠ Corrige los problemas antes de confirmar:\n' + warnings.join('\n'), 'warn');
+        showToast('âš  Corrige los problemas antes de confirmar:\n' + warnings.join('\n'), 'warn');
         updateEnrollmentCart();
         return;
       }
@@ -5431,14 +1851,14 @@
       return;
     }
 
-    // Modal de resumen/pre-factura matrícula
+    // Modal de resumen/pre-factura matrÃ­cula
     function showEnrollmentSummaryModal(cart) {
       const previewInvoice = buildEnrollmentInvoice(cart);
       window.__ENROLLMENT_INVOICE_PREVIEW = previewInvoice;
-      let html = `<div style='font-size:1.1rem;font-weight:600;margin-bottom:0.5rem;'>Resumen de Matrícula</div>`;
+      let html = `<div style='font-size:1.1rem;font-weight:600;margin-bottom:0.5rem;'>Resumen de MatrÃ­cula</div>`;
       html += `<div style='max-height:200px;overflow-y:auto;margin-bottom:1rem;'>`;
       html += `<table style='width:100%;font-size:0.95rem;'>`;
-      html += `<thead><tr><th style='text-align:left;'>Código</th><th style='text-align:left;'>Materia</th><th>Clase</th><th>Créditos</th><th>Costo</th></tr></thead><tbody>`;
+      html += `<thead><tr><th style='text-align:left;'>CÃ³digo</th><th style='text-align:left;'>Materia</th><th>Clase</th><th>CrÃ©ditos</th><th>Costo</th></tr></thead><tbody>`;
       let totalCred = 0;
       let totalCost = 0;
       for (const c of cart) {
@@ -5447,10 +1867,10 @@
         totalCost += c.cost;
       }
       html += `</tbody></table></div>`;
-      html += `<div style='font-weight:500;margin-bottom:0.5rem;'>Total créditos: ${totalCred}</div>`;
+      html += `<div style='font-weight:500;margin-bottom:0.5rem;'>Total crÃ©ditos: ${totalCred}</div>`;
       html += `<div style='font-weight:600;font-size:1.2rem;margin-bottom:1rem;'>Total a pagar: $${totalCost.toLocaleString('es-CO')}</div>`;
       html += `<div style='color:var(--muted);font-size:0.95rem;margin-bottom:1rem;'>Se generara una pre-factura y seras enviado a Pagos. La matricula se activa solo con pago aprobado.</div>`;
-      html += `<div style='display:flex;gap:.6rem;justify-content:flex-end;flex-wrap:wrap;'><button class='btn btn-secondary' onclick='downloadEnrollmentInvoicePdf(window.__ENROLLMENT_INVOICE_PREVIEW, null, "PENDIENTE")'>Descargar PDF</button><button class='btn btn-secondary' onclick='closeModal()'>Cancelar</button><button class='btn btn-primary' onclick='proceedEnrollmentPayment()'>Confirmar matrícula</button></div>`;
+      html += `<div style='display:flex;gap:.6rem;justify-content:flex-end;flex-wrap:wrap;'><button class='btn btn-secondary' onclick='downloadEnrollmentInvoicePdf(window.__ENROLLMENT_INVOICE_PREVIEW, null, "PENDIENTE")'>Descargar PDF</button><button class='btn btn-secondary' onclick='closeModal()'>Cancelar</button><button class='btn btn-primary' onclick='proceedEnrollmentPayment()'>Confirmar matrÃ­cula</button></div>`;
       showModal(html);
     }
 
@@ -5479,7 +1899,7 @@
       const cart = Object.values(ENROLLMENT_CART);
       const msgEl = document.getElementById('enrollment-msg');
       if (!cart.length) {
-        if (msgEl) msgEl.innerHTML = `<span style="color:var(--danger);">✗ No hay materias en el carrito.</span>`;
+        if (msgEl) msgEl.innerHTML = `<span style="color:var(--danger);">âœ— No hay materias en el carrito.</span>`;
         return;
       }
 
@@ -5535,12 +1955,12 @@
 
         clearPendingEnrollmentOrder();
         if (resultArea) {
-          resultArea.innerHTML += `<div style="margin-top:.5rem;color:var(--accent);font-weight:600;">✓ Matricula activada (${result.created || items.length} materias)</div>`;
+          resultArea.innerHTML += `<div style="margin-top:.5rem;color:var(--accent);font-weight:600;">âœ“ Matricula activada (${result.created || items.length} materias)</div>`;
         }
-        showToast('✓ Pago aprobado y matricula activada', 'ok');
+        showToast('âœ“ Pago aprobado y matricula activada', 'ok');
       } catch (e) {
         if (resultArea) {
-          resultArea.innerHTML += `<div style="margin-top:.5rem;color:var(--danger);">✗ ${e.message}</div><div style="font-size:.8rem;color:var(--muted);">Tu orden queda pendiente para reintentar la activacion.</div>`;
+          resultArea.innerHTML += `<div style="margin-top:.5rem;color:var(--danger);">âœ— ${e.message}</div><div style="font-size:.8rem;color:var(--muted);">Tu orden queda pendiente para reintentar la activacion.</div>`;
         }
         showToast(e.message, 'err');
       }
@@ -5554,7 +1974,7 @@
         const res = await fetch(`${API_BASE}/enrollments/me`, { headers: getAuthHeaders() });
         const tbody = document.getElementById('enrollments-tbody');
         if (!res.ok) {
-          tbody.innerHTML = '<tr><td colspan="8"><div class="empty-state"><div class="big">⚠</div>No se pueden cargar materias</div></td></tr>';
+          tbody.innerHTML = '<tr><td colspan="8"><div class="empty-state"><div class="big">âš </div>No se pueden cargar materias</div></td></tr>';
           return;
         }
 
@@ -5564,7 +1984,7 @@
           : [];
 
         if (!currentEnrollments.length) {
-          tbody.innerHTML = '<tr><td colspan="8"><div class="empty-state"><div class="big">📭</div>No estás inscrito en materias</div></td></tr>';
+          tbody.innerHTML = '<tr><td colspan="8"><div class="empty-state"><div class="big">ðŸ“­</div>No estÃ¡s inscrito en materias</div></td></tr>';
           return;
         }
 
@@ -5578,7 +1998,7 @@
               <td>${item.semester || '-'}</td>
               <td>${item.credits || '-'}</td>
               <td>${item.section || '-'}</td>
-              <td>${item.scheduleLabel}${item.classroomLabel && item.classroomLabel !== 'Por definir' ? ` · <span style="font-size:0.85em;">${item.classroomLabel}</span>` : ''}</td>
+              <td>${item.scheduleLabel}${item.classroomLabel && item.classroomLabel !== 'Por definir' ? ` Â· <span style="font-size:0.85em;">${item.classroomLabel}</span>` : ''}</td>
               <td>${item.teacherLabel}</td>
               <td><span class="badge badge-activo">${e.status || 'pendiente'}</span></td>
             </tr>
@@ -5635,7 +2055,7 @@
       if (USER_ROLE === 'docente') {
         const teacher = await loadTeacherProfile();
         if (!teacher) {
-          showToast('✗ No se pudo cargar el perfil del docente', 'err');
+          showToast('âœ— No se pudo cargar el perfil del docente', 'err');
           return;
         }
 
@@ -5659,7 +2079,7 @@
         if (profileProgramLabel?.parentElement) profileProgramLabel.parentElement.style.display = 'none';
         if (passwordFields) passwordFields.style.display = 'block';
         if (title) title.textContent = 'Mi Perfil Docente';
-        if (subtitle) subtitle.textContent = 'Puedes actualizar nombres, apellidos y contraseña';
+        if (subtitle) subtitle.textContent = 'Puedes actualizar nombres, apellidos y contraseÃ±a';
         return;
       }
 
@@ -5668,7 +2088,7 @@
         PROFILE_TARGET_STUDENT_ID = null;
         const authRes = await fetch(`${API_BASE}/auth/profile`, { headers: getAuthHeaders() });
         if (!authRes.ok) {
-          showToast('✗ No se pudo cargar el perfil de administrador', 'err');
+          showToast('âœ— No se pudo cargar el perfil de administrador', 'err');
           return;
         }
 
@@ -5681,7 +2101,7 @@
         if (profileProgramLabel?.parentElement) profileProgramLabel.parentElement.style.display = 'none';
         if (passwordFields) passwordFields.style.display = 'block';
         if (title) title.textContent = 'Mi Perfil';
-        if (subtitle) subtitle.textContent = 'Información personal';
+        if (subtitle) subtitle.textContent = 'InformaciÃ³n personal';
         return;
       }
 
@@ -5708,7 +2128,7 @@
         else if (profileProgram?.parentElement) profileProgram.parentElement.style.display = 'none';
       }
       if (title) title.textContent = 'Mi Perfil';
-      if (subtitle) subtitle.textContent = 'Información personal';
+      if (subtitle) subtitle.textContent = 'InformaciÃ³n personal';
     }
 
     async function updateProfile() {
@@ -5716,7 +2136,7 @@
       const targetId = USER_ROLE === 'docente' ? null : (isAdminSelfProfile ? null : MY_STUDENT?.id || PROFILE_TARGET_STUDENT_ID);
 
       if (USER_ROLE !== 'docente' && !isAdminSelfProfile && !targetId) {
-        showToast('✗ Selecciona un estudiante para editar', 'err');
+        showToast('âœ— Selecciona un estudiante para editar', 'err');
         return;
       }
 
@@ -5735,22 +2155,22 @@
         const confirmPassword = (document.getElementById('profile-confirm-password')?.value || '').trim();
 
         if ((currentPassword || newPassword || confirmPassword) && (!currentPassword || !newPassword || !confirmPassword)) {
-          showToast('Completa los 3 campos de contraseña para cambiarla', 'err');
+          showToast('Completa los 3 campos de contraseÃ±a para cambiarla', 'err');
           return;
         }
         if (newPassword && newPassword.length < 8) {
-          showToast('La nueva contraseña debe tener mínimo 8 caracteres', 'err');
+          showToast('La nueva contraseÃ±a debe tener mÃ­nimo 8 caracteres', 'err');
           return;
         }
         if (newPassword && newPassword !== confirmPassword) {
-          showToast('La confirmación de contraseña no coincide', 'err');
+          showToast('La confirmaciÃ³n de contraseÃ±a no coincide', 'err');
           return;
         }
 
         if (USER_ROLE === 'docente') {
           const teacher = await loadTeacherProfile();
           if (!teacher?.id) {
-            showToast('✗ No se encontró el perfil docente', 'err');
+            showToast('âœ— No se encontrÃ³ el perfil docente', 'err');
             return;
           }
 
@@ -5770,7 +2190,7 @@
 
             if (!teacherRes.ok) {
               const data = await teacherRes.json().catch(() => null);
-              showToast(data?.detail || '✗ No se pudo actualizar el perfil docente', 'err');
+              showToast(data?.detail || 'âœ— No se pudo actualizar el perfil docente', 'err');
               return;
             }
 
@@ -5794,7 +2214,7 @@
 
             if (!authRes.ok) {
               const data = await authRes.json().catch(() => null);
-              showToast(data?.detail || '✗ No se pudo actualizar la contraseña', 'err');
+              showToast(data?.detail || 'âœ— No se pudo actualizar la contraseÃ±a', 'err');
               return;
             }
 
@@ -5810,10 +2230,10 @@
             document.getElementById('profile-new-password').value = '';
             document.getElementById('profile-confirm-password').value = '';
 
-            showToast(newPassword ? '✓ Perfil y contraseña actualizados' : '✓ Perfil actualizado', 'ok');
+            showToast(newPassword ? 'âœ“ Perfil y contraseÃ±a actualizados' : 'âœ“ Perfil actualizado', 'ok');
             return;
           } catch (e) {
-            showToast('✗ Error de conexión', 'err');
+            showToast('âœ— Error de conexiÃ³n', 'err');
             return;
           }
         }
@@ -5839,7 +2259,7 @@
 
           if (!authRes.ok) {
             const data = await authRes.json().catch(() => null);
-            showToast(data?.detail || '✗ No se pudo actualizar la contraseña', 'err');
+            showToast(data?.detail || 'âœ— No se pudo actualizar la contraseÃ±a', 'err');
             return;
           }
 
@@ -5847,10 +2267,10 @@
           document.getElementById('profile-new-password').value = '';
           document.getElementById('profile-confirm-password').value = '';
 
-          showToast(newPassword ? '✓ Perfil y contraseña actualizados' : '✓ Perfil actualizado', 'ok');
+          showToast(newPassword ? 'âœ“ Perfil y contraseÃ±a actualizados' : 'âœ“ Perfil actualizado', 'ok');
           return;
         } catch (e) {
-          showToast('✗ Error de conexión', 'err');
+          showToast('âœ— Error de conexiÃ³n', 'err');
           return;
         }
       }
@@ -5880,14 +2300,14 @@
             MY_STUDENT = updated;
             document.getElementById('student-program-text').textContent = `Programa: ${MY_STUDENT.program || 'Sin programa'}`;
           }
-          showToast('✓ Perfil actualizado', 'ok');
+          showToast('âœ“ Perfil actualizado', 'ok');
           loadStudents();
         } else {
           const data = await res.json().catch(() => null);
-          showToast(data?.detail || '✗ Error al actualizar', 'err');
+          showToast(data?.detail || 'âœ— Error al actualizar', 'err');
         }
       } catch (e) {
-        showToast('✗ Error de conexión', 'err');
+        showToast('âœ— Error de conexiÃ³n', 'err');
       }
     }
 
@@ -5896,13 +2316,13 @@
         const response = await fetch(`${API_BASE}/health`);
         if (response.ok) {
           const data = await response.json();
-          showToast('✓ Sistema operacional', 'ok');
+          showToast('âœ“ Sistema operacional', 'ok');
           updateStatus(data.services || {});
         } else {
-          showToast('✗ Error del sistema', 'err');
+          showToast('âœ— Error del sistema', 'err');
         }
       } catch (e) {
-        showToast('✗ No se puede conectar', 'err');
+        showToast('âœ— No se puede conectar', 'err');
       }
     }
 
@@ -5926,21 +2346,21 @@
         if (state === 'ok') {
           dot.classList.remove('down');
           dot.classList.add('ok');
-          label.textContent = `${svc.id} ✓`;
+          label.textContent = `${svc.id} âœ“`;
           if (stat) stat.textContent = 'OK';
         } else {
           dot.classList.remove('ok');
           dot.classList.add('down');
-          label.textContent = `${svc.id} ✗`;
+          label.textContent = `${svc.id} âœ—`;
           if (stat) stat.textContent = 'NA';
         }
       });
     }
 
-    // ═══════════════════════════════════════════════════════
-    // GRADES MODULE – estado global
-    // ═══════════════════════════════════════════════════════
-    /** Wrapper de fetch que inyecta el token de autorización automáticamente */
+    // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+    // GRADES MODULE â€“ estado global
+    // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+    /** Wrapper de fetch que inyecta el token de autorizaciÃ³n automÃ¡ticamente */
     async function apiFetch(url, options = {}) {
       const opts = { ...options };
       opts.headers = { ...getAuthHeaders(), ...(options.headers || {}) };
@@ -5961,7 +2381,7 @@
       document.getElementById('grades-admin-panel').style.display = (role === 'admin') ? '' : 'none';
     }
 
-    // ── Docente: listar gradebooks propios ──────────────────
+    // â”€â”€ Docente: listar gradebooks propios â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     async function loadGradebooks() {
       const period = document.getElementById('gb-period').value.trim();
       const courseId = document.getElementById('gb-course-filter').value.trim();
@@ -5975,9 +2395,9 @@
       const tbody = document.getElementById('gradebooks-tbody');
       if (!res.ok) { tbody.innerHTML = `<tr><td colspan="6">Error cargando libros</td></tr>`; return; }
       const data = await res.json();
-      if (!data.length) { tbody.innerHTML = `<tr><td colspan="6"><div class="empty-state"><div class="big">◌</div>No hay libros para este filtro.</div></td></tr>`; return; }
+      if (!data.length) { tbody.innerHTML = `<tr><td colspan="6"><div class="empty-state"><div class="big">â—Œ</div>No hay libros para este filtro.</div></td></tr>`; return; }
 
-      const statusLabel = { draft: '📝 Borrador', published: '📢 Publicado', closed: '🔒 Cerrado' };
+      const statusLabel = { draft: 'ðŸ“ Borrador', published: 'ðŸ“¢ Publicado', closed: 'ðŸ”’ Cerrado' };
       tbody.innerHTML = data.map(gb => `
         <tr>
           <td>${gb.id}</td>
@@ -5999,7 +2419,7 @@
       const courseId = parseInt(document.getElementById('new-gb-course').value);
       const period = document.getElementById('new-gb-period').value.trim();
       const section = document.getElementById('new-gb-section').value.trim() || 'A';
-      if (!courseId || !period) { showToast('Completa curso y período', 'error'); return; }
+      if (!courseId || !period) { showToast('Completa curso y perÃ­odo', 'error'); return; }
 
       const res = await apiFetch(`${API_BASE}/grades/gradebooks`, {
         method: 'POST',
@@ -6025,9 +2445,9 @@
 
       document.getElementById('gradebook-detail').style.display = '';
       document.getElementById('gradebook-detail-title').textContent =
-        `Libro #${gradebookId} — Curso ${gradesState.currentGradebook.course_id}`;
+        `Libro #${gradebookId} â€” Curso ${gradesState.currentGradebook.course_id}`;
       document.getElementById('gradebook-detail-meta').textContent =
-        `Período ${gradesState.currentGradebook.period} · Sección ${gradesState.currentGradebook.section} · Estado: ${gradesState.currentGradebook.status}`;
+        `PerÃ­odo ${gradesState.currentGradebook.period} Â· SecciÃ³n ${gradesState.currentGradebook.section} Â· Estado: ${gradesState.currentGradebook.status}`;
 
       const isClosed = gradesState.currentGradebook.status === 'closed';
       document.getElementById('btn-recalc').disabled = isClosed;
@@ -6045,7 +2465,7 @@
       document.getElementById('gradebook-detail').style.display = 'none';
     }
 
-    // ── Componentes ──────────────────────────────────────────
+    // â”€â”€ Componentes â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     async function loadComponents() {
       const gbId = gradesState.currentGradebook?.id;
       if (!gbId) return;
@@ -6066,7 +2486,7 @@
       info.textContent = `Peso acumulado: ${totalWeight}% de 100% requerido`;
 
       if (!gradesState.components.length) {
-        container.innerHTML = `<span style="color:var(--muted);font-size:.85rem;">Sin componentes aún.</span>`;
+        container.innerHTML = `<span style="color:var(--muted);font-size:.85rem;">Sin componentes aÃºn.</span>`;
         return;
       }
       container.innerHTML = gradesState.components.map(c => `
@@ -6097,7 +2517,7 @@
       }
     }
 
-    // ── Roster ──────────────────────────────────────────────
+    // â”€â”€ Roster â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     async function loadRoster() {
       const gbId = gradesState.currentGradebook?.id;
       if (!gbId) return;
@@ -6114,19 +2534,19 @@
       gradesState.rosterData = data;
 
       const comps = gradesState.components;
-      const statusLabel = { draft: 'Borrador', published: 'Publicado', closed: 'Cerrado', sin_notas: '—' };
+      const statusLabel = { draft: 'Borrador', published: 'Publicado', closed: 'Cerrado', sin_notas: 'â€”' };
       const isClosed = gradesState.currentGradebook?.status === 'closed';
 
-      // Cabecera dinámica con componentes
+      // Cabecera dinÃ¡mica con componentes
       thead.innerHTML = `<tr>
         <th>Estudiante ID</th>
         ${comps.map(c => `<th>${c.name}<br><small style="color:var(--muted);">${c.weight}%</small></th>`).join('')}
-        <th>Definitiva</th><th>Aprobó</th><th>Estado</th>
+        <th>Definitiva</th><th>AprobÃ³</th><th>Estado</th>
         ${isClosed ? '' : '<th>Acciones</th>'}
       </tr>`;
 
       if (!data.roster.length) {
-        tbody.innerHTML = `<tr><td colspan="${4 + comps.length}"><div class="empty-state"><div class="big">◌</div>No hay estudiantes matriculados en este curso.</div></td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="${4 + comps.length}"><div class="empty-state"><div class="big">â—Œ</div>No hay estudiantes matriculados en este curso.</div></td></tr>`;
         return;
       }
 
@@ -6139,20 +2559,20 @@
           <td><strong>${row.student_id}</strong></td>
           ${comps.map(c => {
             const s = itemsMap[c.id];
-            return `<td style="text-align:center;">${s !== undefined ? s.toFixed(1) : '<span style="color:var(--muted)">—</span>'}</td>`;
+            return `<td style="text-align:center;">${s !== undefined ? s.toFixed(1) : '<span style="color:var(--muted)">â€”</span>'}</td>`;
           }).join('')}
-          <td style="text-align:center;font-weight:700;color:${scoreColor};">${row.final_score !== null ? row.final_score.toFixed(1) : '—'}</td>
-          <td style="text-align:center;">${row.passed === null ? '—' : row.passed ? '✅' : '❌'}</td>
+          <td style="text-align:center;font-weight:700;color:${scoreColor};">${row.final_score !== null ? row.final_score.toFixed(1) : 'â€”'}</td>
+          <td style="text-align:center;">${row.passed === null ? 'â€”' : row.passed ? 'âœ…' : 'âŒ'}</td>
           <td>${statusLabel[row.status] || row.status}</td>
           ${isClosed ? '' : `<td style="display:flex;gap:.35rem;flex-wrap:wrap;">
-            <button class="btn btn-primary btn-sm" onclick="openGradeInput(${row.student_id})">✏️ Notas</button>
-            ${row.final_score !== null ? `<button class="btn btn-secondary btn-sm" onclick="openOverride(${row.student_id})">⚡ Ajustar</button>` : ''}
+            <button class="btn btn-primary btn-sm" onclick="openGradeInput(${row.student_id})">âœï¸ Notas</button>
+            ${row.final_score !== null ? `<button class="btn btn-secondary btn-sm" onclick="openOverride(${row.student_id})">âš¡ Ajustar</button>` : ''}
           </td>`}
         </tr>`;
       }).join('');
     }
 
-    // ── Ingreso de notas por componente ─────────────────────
+    // â”€â”€ Ingreso de notas por componente â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     function openGradeInput(studentId) {
       gradesState.currentGradeInputStudentId = studentId;
       const comps = gradesState.components;
@@ -6161,12 +2581,12 @@
       const itemsMap = {};
       (row?.items || []).forEach(i => { itemsMap[i.component_id] = i.score; });
 
-      document.getElementById('grade-input-title').textContent = `✏️ Notas — Estudiante ${studentId}`;
+      document.getElementById('grade-input-title').textContent = `âœï¸ Notas â€” Estudiante ${studentId}`;
       document.getElementById('grade-input-fields').innerHTML = comps.map(c => `
         <div class="form-group">
           <label>${c.name} (${c.weight}%)</label>
           <input id="score-comp-${c.id}" type="number" step="0.1" min="0" max="5"
-            value="${itemsMap[c.id] !== undefined ? itemsMap[c.id] : ''}" placeholder="0.0 – 5.0" />
+            value="${itemsMap[c.id] !== undefined ? itemsMap[c.id] : ''}" placeholder="0.0 â€“ 5.0" />
         </div>`).join('');
       document.getElementById('modal-grade-input').style.display = 'flex';
     }
@@ -6200,7 +2620,7 @@
       await loadRoster();
     }
 
-    // ── Override manual ─────────────────────────────────────
+    // â”€â”€ Override manual â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     function openOverride(studentId) {
       const roster = gradesState.rosterData?.roster || [];
       const row = roster.find(r => r.student_id === studentId);
@@ -6222,7 +2642,7 @@
       if (!recalcRes.ok) { showToast('Error al recalcular antes de ajuste', 'error'); return; }
       const finals = await recalcRes.json();
       const finalEntry = finals.find(f => f.student_id === gradesState.overrideStudentId);
-      if (!finalEntry) { showToast('No se encontró la definitiva', 'error'); return; }
+      if (!finalEntry) { showToast('No se encontrÃ³ la definitiva', 'error'); return; }
 
       const res = await apiFetch(`${API_BASE}/grades/finals/${finalEntry.id}/override`, {
         method: 'PUT',
@@ -6239,7 +2659,7 @@
       }
     }
 
-    // ── Recalcular ───────────────────────────────────────────
+    // â”€â”€ Recalcular â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     async function recalcuateGrades() {
       const gbId = gradesState.currentGradebook?.id;
       const totalWeight = gradesState.components.reduce((s, c) => s + c.weight, 0);
@@ -6256,11 +2676,11 @@
       }
     }
 
-    // ── Estado del libro ─────────────────────────────────────
+    // â”€â”€ Estado del libro â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     async function setGradebookStatus(newStatus) {
       const gbId = gradesState.currentGradebook?.id;
       const messages = { published: 'publicar', closed: 'cerrar definitivamente' };
-      if (!confirm(`¿Seguro que deseas ${messages[newStatus] || newStatus} este libro?`)) return;
+      if (!confirm(`Â¿Seguro que deseas ${messages[newStatus] || newStatus} este libro?`)) return;
 
       const res = await apiFetch(`${API_BASE}/grades/gradebooks/${gbId}/status`, {
         method: 'PATCH',
@@ -6272,7 +2692,7 @@
         gradesState.currentGradebook = updated;
         showToast(`Libro ${newStatus === 'published' ? 'publicado' : 'cerrado'}`, 'success');
         document.getElementById('gradebook-detail-meta').textContent =
-          `Período ${updated.period} · Sección ${updated.section} · Estado: ${updated.status}`;
+          `PerÃ­odo ${updated.period} Â· SecciÃ³n ${updated.section} Â· Estado: ${updated.status}`;
         const isClosed = updated.status === 'closed';
         document.getElementById('btn-recalc').disabled = isClosed;
         document.getElementById('btn-publish').disabled = isClosed;
@@ -6286,15 +2706,15 @@
       }
     }
 
-    // ── Vista estudiante ─────────────────────────────────────
+    // â”€â”€ Vista estudiante â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     async function loadMyGrades() {
       const container = document.getElementById('my-grades-content');
-      container.innerHTML = `<div class="empty-state"><div class="big">◌</div>Cargando calificaciones...</div>`;
+      container.innerHTML = `<div class="empty-state"><div class="big">â—Œ</div>Cargando calificaciones...</div>`;
 
       try {
         const currentCourses = await getMyCurrentCourses();
         if (!currentCourses.length) {
-          container.innerHTML = `<div class="empty-state"><div class="big">📭</div>No tienes materias activas en este momento.</div>`;
+          container.innerHTML = `<div class="empty-state"><div class="big">ðŸ“­</div>No tienes materias activas en este momento.</div>`;
           return;
         }
 
@@ -6325,7 +2745,7 @@
 
         const coursesWithGrades = byCourse.filter(c => c.gradedSubmissions.length > 0);
         if (!coursesWithGrades.length) {
-          container.innerHTML = `<div class="empty-state"><div class="big">📚</div>Aún no tienes actividades calificadas en tus materias activas.</div>`;
+          container.innerHTML = `<div class="empty-state"><div class="big">ðŸ“š</div>AÃºn no tienes actividades calificadas en tus materias activas.</div>`;
           return;
         }
 
@@ -6348,10 +2768,10 @@
                 <tbody>
                   ${gradedSubmissions.map(({ box, submission }) => `
                     <tr>
-                      <td>${escapeHtml(box.title || `Buzón ${box.id}`)}</td>
-                      <td>${submission.submitted_at ? new Date(submission.submitted_at).toLocaleString('es-CO') : '—'}</td>
+                      <td>${escapeHtml(box.title || `BuzÃ³n ${box.id}`)}</td>
+                      <td>${submission.submitted_at ? new Date(submission.submitted_at).toLocaleString('es-CO') : 'â€”'}</td>
                       <td style="text-align:center;font-weight:700;color:${Number(submission.score) >= 3 ? 'var(--accent)' : 'var(--danger)'};">${Number(submission.score).toFixed(1)}</td>
-                      <td>${escapeHtml(submission.teacher_comment || '—')}</td>
+                      <td>${escapeHtml(submission.teacher_comment || 'â€”')}</td>
                     </tr>
                   `).join('')}
                 </tbody>
@@ -6364,7 +2784,7 @@
       }
     }
 
-    // ── Vista admin ──────────────────────────────────────────
+    // â”€â”€ Vista admin â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     async function loadAdminGradebooks() {
       const period = document.getElementById('admin-gb-period').value.trim();
       let url = `${API_BASE}/grades/gradebooks?`;
@@ -6373,18 +2793,18 @@
       const tbody = document.getElementById('admin-gradebooks-tbody');
       if (!res.ok) { tbody.innerHTML = `<tr><td colspan="7">Error</td></tr>`; return; }
       const data = await res.json();
-      const statusLabel = { draft: '📝 Borrador', published: '📢 Publicado', closed: '🔒 Cerrado' };
+      const statusLabel = { draft: 'ðŸ“ Borrador', published: 'ðŸ“¢ Publicado', closed: 'ðŸ”’ Cerrado' };
       tbody.innerHTML = data.map(gb => `
         <tr>
           <td>${gb.id}</td><td>${gb.course_id}</td><td>${gb.period}</td><td>${gb.section}</td>
-          <td>${gb.teacher_user_id || '—'}</td>
+          <td>${gb.teacher_user_id || 'â€”'}</td>
           <td>${statusLabel[gb.status] || gb.status}</td>
           <td><button class="btn btn-primary btn-sm" onclick="openGradebook(${gb.id})">Abrir</button></td>
-        </tr>`).join('') || `<tr><td colspan="7"><div class="empty-state"><div class="big">◌</div>Sin libros.</div></td></tr>`;
+        </tr>`).join('') || `<tr><td colspan="7"><div class="empty-state"><div class="big">â—Œ</div>Sin libros.</div></td></tr>`;
     }
 
     async function loadGrades() {
-      // compatibilidad con código anterior (health check)
+      // compatibilidad con cÃ³digo anterior (health check)
       try {
         const res = await fetch(`${API_BASE}/grades/health`);
         return res.ok;
@@ -6393,10 +2813,10 @@
 
 
     async function loadReports() {
-      // ya no se usa el botón genérico, pero se mantiene por compatibilidad
+      // ya no se usa el botÃ³n genÃ©rico, pero se mantiene por compatibilidad
     }
 
-    // ── Descargar reporte de estudiante o curso (admin) ───────────────────────
+    // â”€â”€ Descargar reporte de estudiante o curso (admin) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     async function downloadReport(type, format) {
       const isStudent = type === 'student';
       const msgId   = isStudent ? 'rpt-student-msg' : 'rpt-course-msg';
@@ -6405,44 +2825,44 @@
       let id = null;
 
       if (isStudent) {
-        // Cédula: buscar estudiante y obtener su ID
+        // CÃ©dula: buscar estudiante y obtener su ID
         const cedula = document.getElementById('rpt-student-id')?.value?.trim();
         if (!cedula) {
-          msgEl.innerHTML = `<span style="color:var(--danger)">⚠ Ingresa una cédula.</span>`;
+          msgEl.innerHTML = `<span style="color:var(--danger)">âš  Ingresa una cÃ©dula.</span>`;
           return;
         }
         
-        // Buscar estudiante por cédula
+        // Buscar estudiante por cÃ©dula
         try {
           const students = await fetch(`${API_BASE}/students?limit=10000`, { headers: getAuthHeaders() }).then(r => r.json());
           const student = students.find(s => String(s.id_estudiante || s.cedula) === String(cedula) || 
                                             String(s.id) === String(cedula));
           if (!student) {
-            msgEl.innerHTML = `<span style="color:var(--danger)">✗ Estudiante no encontrado.</span>`;
+            msgEl.innerHTML = `<span style="color:var(--danger)">âœ— Estudiante no encontrado.</span>`;
             return;
           }
           id = student.id;
         } catch (e) {
-          msgEl.innerHTML = `<span style="color:var(--danger)">✗ Error al buscar estudiante.</span>`;
+          msgEl.innerHTML = `<span style="color:var(--danger)">âœ— Error al buscar estudiante.</span>`;
           return;
         }
       } else {
         // Curso: usar el ID seleccionado en el select
         id = document.getElementById('rpt-course-id')?.value?.trim();
         if (!id || isNaN(Number(id)) || Number(id) < 1) {
-          msgEl.innerHTML = `<span style="color:var(--danger)">⚠ Selecciona un curso.</span>`;
+          msgEl.innerHTML = `<span style="color:var(--danger)">âš  Selecciona un curso.</span>`;
           return;
         }
       }
 
-      msgEl.innerHTML = `<span style="color:var(--muted)">Generando ${format.toUpperCase()}…</span>`;
+      msgEl.innerHTML = `<span style="color:var(--muted)">Generando ${format.toUpperCase()}â€¦</span>`;
 
       try {
         const url = `${API_BASE}/reports/${type}/${id}/export?format=${format}`;
         const res = await fetch(url, { headers: getAuthHeaders() });
         if (!res.ok) {
           const detail = await res.json().catch(() => ({}));
-          msgEl.innerHTML = `<span style="color:var(--danger)">✗ ${detail.detail || 'Error al generar informe.'}</span>`;
+          msgEl.innerHTML = `<span style="color:var(--danger)">âœ— ${detail.detail || 'Error al generar informe.'}</span>`;
           return;
         }
         const blob = await res.blob();
@@ -6451,29 +2871,29 @@
         a.download = `reporte_${type}_${id}.${format}`;
         a.click();
         URL.revokeObjectURL(a.href);
-        msgEl.innerHTML = `<span style="color:var(--accent)">✓ Descarga iniciada.</span>`;
+        msgEl.innerHTML = `<span style="color:var(--accent)">âœ“ Descarga iniciada.</span>`;
       } catch (e) {
-        msgEl.innerHTML = `<span style="color:var(--danger)">✗ Error de conexión.</span>`;
+        msgEl.innerHTML = `<span style="color:var(--danger)">âœ— Error de conexiÃ³n.</span>`;
       }
     }
 
-    // ── Descargar mi propio reporte (estudiante) ──────────────────────────────
+    // â”€â”€ Descargar mi propio reporte (estudiante) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     async function downloadMyReport(format) {
       const msgEl = document.getElementById('rpt-me-msg');
-      msgEl.innerHTML = `<span style="color:var(--muted)">Generando ${format.toUpperCase()}…</span>`;
+      msgEl.innerHTML = `<span style="color:var(--muted)">Generando ${format.toUpperCase()}â€¦</span>`;
 
       try {
         if (!MY_STUDENT) await loadMyStudent();
         const studentId = MY_STUDENT?.id;
         if (!studentId) {
-          msgEl.innerHTML = `<span style="color:var(--danger)">✗ No se pudo obtener tu perfil.</span>`;
+          msgEl.innerHTML = `<span style="color:var(--danger)">âœ— No se pudo obtener tu perfil.</span>`;
           return;
         }
         const url = `${API_BASE}/reports/student/${studentId}/export?format=${format}`;
         const res = await fetch(url, { headers: getAuthHeaders() });
         if (!res.ok) {
           const detail = await res.json().catch(() => ({}));
-          msgEl.innerHTML = `<span style="color:var(--danger)">✗ ${detail.detail || 'Error al generar informe.'}</span>`;
+          msgEl.innerHTML = `<span style="color:var(--danger)">âœ— ${detail.detail || 'Error al generar informe.'}</span>`;
           return;
         }
         const blob = await res.blob();
@@ -6482,13 +2902,13 @@
         a.download = `mi_informe.${format}`;
         a.click();
         URL.revokeObjectURL(a.href);
-        msgEl.innerHTML = `<span style="color:var(--accent)">✓ Descarga iniciada.</span>`;
+        msgEl.innerHTML = `<span style="color:var(--accent)">âœ“ Descarga iniciada.</span>`;
       } catch (e) {
-        msgEl.innerHTML = `<span style="color:var(--danger)">✗ Error de conexión.</span>`;
+        msgEl.innerHTML = `<span style="color:var(--danger)">âœ— Error de conexiÃ³n.</span>`;
       }
     }
 
-    // ── Llenar filtros de carrera y curso para reporte de curso ──────────────
+    // â”€â”€ Llenar filtros de carrera y curso para reporte de curso â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     async function loadReportFilters() {
       const careerSel = document.getElementById('rpt-course-career');
       const courseSel = document.getElementById('rpt-course-id');
@@ -6496,8 +2916,8 @@
 
       try {
         const careers = ACADEMIC_CAREERS || [];
-        careerSel.innerHTML = '<option value="">— Selecciona carrera —</option>' +
-          careers.map(c => `<option value="${c.id}">${c.code} — ${c.name}</option>`).join('');
+        careerSel.innerHTML = '<option value="">â€” Selecciona carrera â€”</option>' +
+          careers.map(c => `<option value="${c.id}">${c.code} â€” ${c.name}</option>`).join('');
       } catch (e) {
         console.error('Error cargando carreras:', e);
       }
@@ -6515,8 +2935,8 @@
           courseSel.innerHTML = '<option value="">No hay cursos en esta carrera</option>';
           return;
         }
-        courseSel.innerHTML = '<option value="">— Selecciona curso —</option>' +
-          courses.map(c => `<option value="${c.id}">${c.code} — ${c.name}</option>`).join('');
+        courseSel.innerHTML = '<option value="">â€” Selecciona curso â€”</option>' +
+          courses.map(c => `<option value="${c.id}">${c.code} â€” ${c.name}</option>`).join('');
       } catch (e) {
         courseSel.innerHTML = '<option value="">Error cargando cursos</option>';
         console.error('Error:', e);
@@ -6527,7 +2947,7 @@
       loadPaymentSection();
     }
 
-    // ─── Módulo de pagos completo ─────────────────────────────────────────────
+    // â”€â”€â”€ MÃ³dulo de pagos completo â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     let CURRENT_PAY_METHOD = 'pse';
     let ACTIVE_PSE_SESSION = null;
@@ -6551,7 +2971,7 @@
     }
 
     async function loadPaymentSection() {
-      // Determinar qué panel mostrar
+      // Determinar quÃ© panel mostrar
       document.getElementById('payment-student-panel').style.display = 'none';
       document.getElementById('payment-admin-panel').style.display = 'none';
       document.getElementById('payment-generic-panel').style.display = 'none';
@@ -6585,7 +3005,7 @@
           setText('pay-stat-debt', fmt(data.total_debt));
           setText('pay-stat-paid', fmt(data.total_paid));
           setText('pay-stat-balance', fmt(data.balance));
-          setText('pay-stat-status', data.status || '—');
+          setText('pay-stat-status', data.status || 'â€”');
         } else if (res.status === 404) {
           setText('pay-stat-debt', '$0');
           setText('pay-stat-paid', '$0');
@@ -6616,7 +3036,7 @@
         const res = await fetch(`${API_BASE}/payments/me`, { headers: getAuthHeaders() });
         if (!res.ok) {
           PAYMENT_HISTORY_CACHE = [];
-          tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state"><div class="big">📭</div>Sin historial de pagos</div></td></tr>';
+          tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state"><div class="big">ðŸ“­</div>Sin historial de pagos</div></td></tr>';
           return;
         }
         const payments = await res.json();
@@ -6631,29 +3051,28 @@
           setActiveEnrollmentPaymentReference(null);
         }
         if (!Array.isArray(payments) || payments.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state"><div class="big">📭</div>Sin pagos registrados</div></td></tr>';
+          tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state"><div class="big">ðŸ“­</div>Sin pagos registrados</div></td></tr>';
           return;
         }
         const statusBadge = s => {
-          const normalized = normalizePaymentStatus(s);
-          const map = { aprobado: 'approved', pendiente: 'pending', rechazado: 'rejected', expirado: 'rejected' };
-          const cls = map[normalized] || 'pending';
-          return `<span class="badge badge-status-${cls}">${normalized || 'desconocido'}</span>`;
+          const map = { aprobado: 'approved', pendiente: 'pending', rechazado: 'rejected' };
+          const cls = map[s] || 'pending';
+          return `<span class="badge badge-status-${cls}">${s || 'desconocido'}</span>`;
         };
         const fmt = n => `$${(n||0).toLocaleString('es-CO')}`;
         tbody.innerHTML = payments.map(p => `
           <tr>
-            <td>${p.created_at ? new Date(p.created_at).toLocaleDateString('es-CO', {day:'2-digit',month:'short',year:'numeric'}) : '—'}</td>
-            <td>${p.concept || '—'}</td>
+            <td>${p.created_at ? new Date(p.created_at).toLocaleDateString('es-CO', {day:'2-digit',month:'short',year:'numeric'}) : 'â€”'}</td>
+            <td>${p.concept || 'â€”'}</td>
             <td>${(p.payment_method||'').toUpperCase()}</td>
             <td style="color:var(--accent);font-weight:600">${fmt(p.amount)}</td>
-            <td><code style="font-size:.7rem;color:var(--muted)">${p.reference || '—'}</code></td>
+            <td><code style="font-size:.7rem;color:var(--muted)">${p.reference || 'â€”'}</code></td>
             <td>${statusBadge(p.status)}</td>
           </tr>
         `).reverse().join('');
       } catch (e) {
         PAYMENT_HISTORY_CACHE = [];
-        tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state"><div class="big">⚠</div>Error al cargar historial</div></td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state"><div class="big">âš </div>Error al cargar historial</div></td></tr>';
       }
     }
 
@@ -6667,7 +3086,7 @@
       const method = CURRENT_PAY_METHOD;
 
       if (!amount || amount < 1000) {
-        showToast('Ingresa un monto válido (mínimo $1,000)', 'err');
+        showToast('Ingresa un monto vÃ¡lido (mÃ­nimo $1,000)', 'err');
         return;
       }
       if (!concept) {
@@ -6709,15 +3128,15 @@
         payload.bank_code = bankCode;
       } else if (method === 'nequi') {
         const phone = document.getElementById('pay-nequi-phone').value.trim();
-        if (!phone || phone.length < 10) { showToast('Ingresa un número de celular válido (10 dígitos)', 'err'); return; }
+        if (!phone || phone.length < 10) { showToast('Ingresa un nÃºmero de celular vÃ¡lido (10 dÃ­gitos)', 'err'); return; }
         payload.phone = phone;
       } else if (method === 'tarjeta') {
         const cardNum = document.getElementById('pay-card-number').value.replace(/\s/g, '');
         const exp = document.getElementById('pay-card-exp').value;
         const cvv = document.getElementById('pay-card-cvv').value;
         const name = document.getElementById('pay-card-name').value;
-        if (!cardNum || cardNum.length < 15) { showToast('Número de tarjeta inválido', 'err'); return; }
-        if (!exp || !exp.includes('/')) { showToast('Fecha de vencimiento inválida', 'err'); return; }
+        if (!cardNum || cardNum.length < 15) { showToast('NÃºmero de tarjeta invÃ¡lido', 'err'); return; }
+        if (!exp || !exp.includes('/')) { showToast('Fecha de vencimiento invÃ¡lida', 'err'); return; }
         if (!cvv) { showToast('Ingresa el CVV', 'err'); return; }
         if (!name) { showToast('Ingresa el nombre en la tarjeta', 'err'); return; }
         // Para tarjeta, lo procesamos directo
@@ -6738,7 +3157,7 @@
         const data = await res.json();
 
         if (!res.ok) {
-          showToast(data?.detail || '✗ Error al iniciar pago', 'err');
+          showToast(data?.detail || 'âœ— Error al iniciar pago', 'err');
           btn.disabled = false;
           btn.textContent = 'Pagar ahora';
           return;
@@ -6755,7 +3174,7 @@
         }
 
       } catch (e) {
-        showToast('✗ Error de conexión', 'err');
+        showToast('âœ— Error de conexiÃ³n', 'err');
         btn.disabled = false;
         btn.textContent = 'Pagar ahora';
       }
@@ -6764,39 +3183,6 @@
     async function startRealEnrollmentCheckout(order, studentId, btn) {
       const resultArea = document.getElementById('pay-result-area');
       try {
-        const renderCheckoutCard = (titleText) => {
-          const checkoutForButton = (order.checkout_url && isValidWompiCheckoutUrl(order.checkout_url)) ? order.checkout_url : '';
-          if (!resultArea) return;
-          resultArea.innerHTML = `
-            <div style="background:rgba(29,78,216,.08);border:1px solid rgba(29,78,216,.22);border-radius:12px;padding:1rem;">
-              <div style="font-weight:700;color:var(--accent2);">${titleText}</div>
-              <div style="font-size:.84rem;color:var(--muted);margin-top:.25rem;">Factura: ${order.invoiceId}</div>
-              <div style="font-size:.84rem;color:var(--muted);">Referencia: ${order.payment_reference}</div>
-              <div style="font-size:.82rem;color:var(--muted);margin-top:.35rem;">En el checkout de Wompi puedes pagar con PSE o Nequi de forma real, segun disponibilidad de tu comercio.</div>
-              <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.65rem;">
-                <button class="btn btn-primary btn-sm" onclick="openEnrollmentCheckout('${order.payment_reference}', '${checkoutForButton}')">Ir a pagar</button>
-                <button class="btn btn-secondary btn-sm" onclick="verifyEnrollmentCheckoutPayment('${order.payment_reference}')">Verificar pago</button>
-                <button class="btn btn-secondary btn-sm" onclick="downloadEnrollmentInvoicePdf()">Descargar PDF</button>
-              </div>
-            </div>
-          `;
-        };
-
-        // Si ya existe un checkout pendiente para esta misma factura, reutilizarlo.
-        const pendingByInvoice = getPendingEnrollmentPaymentsFromHistory()
-          .find(p => String(p.invoiceId || '') === String(order.invoiceId || ''));
-        if (pendingByInvoice?.reference) {
-          order.payment_reference = pendingByInvoice.reference;
-          order.checkout_url = pendingByInvoice.checkout_url || null;
-          order.checkout_method_hint = CURRENT_PAY_METHOD;
-          order.status = 'awaiting_payment';
-          savePendingEnrollmentOrder(order);
-          setActiveEnrollmentPaymentReference(order.payment_reference);
-          renderCheckoutCard('Checkout pendiente encontrado');
-          showToast('Ya existe un checkout pendiente para esta factura', 'warn');
-          return;
-        }
-
         const payload = {
           student_id: studentId,
           amount_in_cents: Number(order.totalCost || 0) * 100,
@@ -6827,15 +3213,27 @@
         }
 
         order.payment_reference = data.payment.reference;
-        const checkoutFromResponse = data.checkout_url || data.payment.checkout_url || null;
-        order.checkout_url = isValidWompiCheckoutUrl(checkoutFromResponse)
-          ? checkoutFromResponse
-          : (buildWompiCheckoutUrlFromLinkId(data.wompi_link_id) || null);
+        order.checkout_url = data.checkout_url || data.payment.checkout_url || null;
         order.checkout_method_hint = CURRENT_PAY_METHOD;
         order.status = 'awaiting_payment';
         savePendingEnrollmentOrder(order);
         setActiveEnrollmentPaymentReference(order.payment_reference);
-        renderCheckoutCard('Checkout real creado');
+
+        if (resultArea) {
+          resultArea.innerHTML = `
+            <div style="background:rgba(29,78,216,.08);border:1px solid rgba(29,78,216,.22);border-radius:12px;padding:1rem;">
+              <div style="font-weight:700;color:var(--accent2);">Checkout real creado</div>
+              <div style="font-size:.84rem;color:var(--muted);margin-top:.25rem;">Factura: ${order.invoiceId}</div>
+              <div style="font-size:.84rem;color:var(--muted);">Referencia: ${order.payment_reference}</div>
+              <div style="font-size:.82rem;color:var(--muted);margin-top:.35rem;">En el checkout de Wompi puedes pagar con PSE o Nequi de forma real, segun disponibilidad de tu comercio.</div>
+              <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.65rem;">
+                <button class="btn btn-primary btn-sm" onclick="openEnrollmentCheckout()">Ir a pagar</button>
+                <button class="btn btn-secondary btn-sm" onclick="verifyEnrollmentCheckoutPayment('${order.payment_reference}')">Verificar pago</button>
+                <button class="btn btn-secondary btn-sm" onclick="downloadEnrollmentInvoicePdf()">Descargar PDF</button>
+              </div>
+            </div>
+          `;
+        }
       } catch (error) {
         showPaymentError(error.message || 'No se pudo iniciar checkout real');
       } finally {
@@ -6859,7 +3257,7 @@
           throw new Error(data?.detail || 'No se pudo verificar el estado del pago');
         }
 
-        const normalized = normalizePaymentStatus(data.status);
+        const normalized = String(data.status || '').toLowerCase();
         if (normalized === 'aprobado') {
           const orderByRef = findPendingEnrollmentOrderByReference(reference);
           if (orderByRef?.invoiceId) {
@@ -6891,9 +3289,9 @@
     }
 
     async function handleTarjetaFlow(session) {
-      // Tarjeta: confirmar directamente (simulación)
+      // Tarjeta: confirmar directamente (simulaciÃ³n)
       const resultArea = document.getElementById('pay-result-area');
-      resultArea.innerHTML = `<div style="color:var(--muted);font-size:.875rem;">⏳ Validando tarjeta y procesando pago...</div>`;
+      resultArea.innerHTML = `<div style="color:var(--muted);font-size:.875rem;">â³ Validando tarjeta y procesando pago...</div>`;
 
       await new Promise(r => setTimeout(r, 1800));
 
@@ -6924,7 +3322,7 @@
         <div class="nequi-waiting">
           <div class="pulse-dot"></div>
           <div>
-            <div style="font-weight:600;color:#a855f7;">💜 Notificación enviada a Nequi</div>
+            <div style="font-weight:600;color:#a855f7;">ðŸ’œ NotificaciÃ³n enviada a Nequi</div>
             <div style="font-size:.8rem;color:var(--muted);margin-top:4px;">
               Abre la app Nequi en el celular <strong>${phone}</strong> y aprueba el cobro de
               <strong>$${(session.amount||0).toLocaleString('es-CO')} COP</strong>.
@@ -6932,12 +3330,12 @@
           </div>
         </div>
         <div style="display:flex;gap:.5rem;margin-top:.75rem;">
-          <button class="btn btn-primary btn-sm" onclick="confirmNequiManually('${session.session_token}')">✓ He aprobado en Nequi</button>
-          <button class="btn btn-danger btn-sm" onclick="cancelNequiPayment('${session.session_token}')">✗ Cancelar</button>
+          <button class="btn btn-primary btn-sm" onclick="confirmNequiManually('${session.session_token}')">âœ“ He aprobado en Nequi</button>
+          <button class="btn btn-danger btn-sm" onclick="cancelNequiPayment('${session.session_token}')">âœ— Cancelar</button>
         </div>
       `;
 
-      // Polling automático por 3 min
+      // Polling automÃ¡tico por 3 min
       let attempts = 0;
       NEQUI_POLL_INTERVAL = setInterval(async () => {
         attempts++;
@@ -6985,7 +3383,7 @@
           showPaymentError(result?.detail || 'Error al confirmar pago');
         }
       } catch (e) {
-        showPaymentError('Error de conexión');
+        showPaymentError('Error de conexiÃ³n');
       }
       const btn = document.getElementById('btn-pay-submit');
       btn.disabled = false;
@@ -7014,21 +3412,21 @@
 
       resultArea.innerHTML = `
         <div class="pse-redirect-cta">
-          <div style="font-weight:600;color:var(--accent2);">🏦 Redirigir a ${bankName}</div>
+          <div style="font-weight:600;color:var(--accent2);">ðŸ¦ Redirigir a ${bankName}</div>
           <div style="font-size:.85rem;color:var(--muted);">
-            Se abrirá el portal seguro de <strong>${bankName}</strong> para que completes el pago de
+            Se abrirÃ¡ el portal seguro de <strong>${bankName}</strong> para que completes el pago de
             <strong>$${(session.amount||0).toLocaleString('es-CO')} COP</strong>.<br>
-            Una vez finalices en el banco, regresa aquí y haz clic en "Verificar resultado".
+            Una vez finalices en el banco, regresa aquÃ­ y haz clic en "Verificar resultado".
           </div>
           <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
             <button class="btn btn-primary btn-sm" onclick="openPseWindow('${redirectUrl}', '${session.session_token}')">
-              🔗 Ir al portal del banco
+              ðŸ”— Ir al portal del banco
             </button>
             <button class="btn btn-secondary btn-sm" onclick="checkPseResult('${session.session_token}')">
-              🔁 Verificar resultado
+              ðŸ” Verificar resultado
             </button>
             <button class="btn btn-danger btn-sm" onclick="cancelPsePayment('${session.session_token}')">
-              ✗ Cancelar
+              âœ— Cancelar
             </button>
           </div>
         </div>
@@ -7066,7 +3464,7 @@
           } else if (session.status === 'rejected') {
             showPaymentError('El pago fue rechazado por el banco.');
           } else {
-            // Auto-confirm para la simulación (el usuario volvió del banco)
+            // Auto-confirm para la simulaciÃ³n (el usuario volviÃ³ del banco)
             const confirmRes = await fetch(`${API_BASE}/payments/session/${token}/confirm`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
@@ -7076,7 +3474,7 @@
               if (PSE_WINDOW && !PSE_WINDOW.closed) PSE_WINDOW.close();
               showPaymentSuccess(result);
             } else {
-              showToast('El pago aún no ha sido confirmado por el banco.', 'err');
+              showToast('El pago aÃºn no ha sido confirmado por el banco.', 'err');
             }
           }
         }
@@ -7105,11 +3503,11 @@
       const resultArea = document.getElementById('pay-result-area');
       resultArea.innerHTML = `
         <div style="background:rgba(79,255,176,.08);border:1px solid rgba(79,255,176,.25);border-radius:12px;padding:1.25rem;margin-top:.5rem;">
-          <div style="font-size:1.2rem;font-weight:700;color:var(--accent);margin-bottom:.5rem;">✔ Pago aprobado</div>
+          <div style="font-size:1.2rem;font-weight:700;color:var(--accent);margin-bottom:.5rem;">âœ” Pago aprobado</div>
           <div style="font-size:.875rem;color:var(--muted);line-height:1.7;">
             <div>Monto: <strong style="color:var(--text)">${fmt(session.amount)} COP</strong></div>
-            <div>Concepto: <strong style="color:var(--text)">${session.concept || '—'}</strong></div>
-            <div>Método: <strong style="color:var(--text)">${(session.method||'').toUpperCase()}</strong></div>
+            <div>Concepto: <strong style="color:var(--text)">${session.concept || 'â€”'}</strong></div>
+            <div>MÃ©todo: <strong style="color:var(--text)">${(session.method||'').toUpperCase()}</strong></div>
             <div>Referencia: <code style="color:var(--accent2);font-size:.75rem">${reference}</code></div>
             <div style="margin-top:.55rem;display:flex;gap:.45rem;flex-wrap:wrap;">
               <button class="btn btn-secondary btn-sm" onclick="downloadEnrollmentInvoicePdf(null, '${reference}', 'PAGADA')">Descargar factura PDF</button>
@@ -7117,7 +3515,7 @@
           </div>
         </div>
       `;
-      showToast('✓ Pago procesado exitosamente', 'ok');
+      showToast('âœ“ Pago procesado exitosamente', 'ok');
       finalizePendingEnrollmentAfterPayment(session);
       // Actualizar resumen y historial
       setTimeout(() => {
@@ -7132,10 +3530,10 @@
       const resultArea = document.getElementById('pay-result-area');
       resultArea.innerHTML = `
         <div style="background:rgba(255,79,106,.08);border:1px solid rgba(255,79,106,.25);border-radius:12px;padding:1rem;margin-top:.5rem;color:var(--danger);">
-          ✗ ${msg}
+          âœ— ${msg}
         </div>
       `;
-      showToast(`✗ ${msg}`, 'err');
+      showToast(`âœ— ${msg}`, 'err');
     }
 
     async function loadPaymentServiceStatus() {
@@ -7144,7 +3542,7 @@
       try {
         const res = await fetch(`${API_BASE}/payments/health`);
         if (res.ok) {
-          content.innerHTML = '<span style="color:var(--accent)">✔ Payment Service disponible y operando</span>';
+          content.innerHTML = '<span style="color:var(--accent)">âœ” Payment Service disponible y operando</span>';
         } else {
           content.textContent = 'Payment Service no disponible';
         }
@@ -7171,15 +3569,15 @@
         });
         const data = await res.json();
         if (res.ok) {
-          showToast(`✓ Deuda registrada: $${amount.toLocaleString('es-CO')} COP`, 'ok');
+          showToast(`âœ“ Deuda registrada: $${amount.toLocaleString('es-CO')} COP`, 'ok');
           document.getElementById('admin-debt-student-id').value = '';
           document.getElementById('admin-debt-amount').value = '';
           document.getElementById('admin-debt-description').value = '';
         } else {
-          showToast(data?.detail || '✗ Error al registrar deuda', 'err');
+          showToast(data?.detail || 'âœ— Error al registrar deuda', 'err');
         }
       } catch (e) {
-        showToast('✗ Error de conexión', 'err');
+        showToast('âœ— Error de conexiÃ³n', 'err');
       }
     }
 
@@ -7230,16 +3628,16 @@
           const tbody = document.getElementById('students-tbody');
 
           if (students.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><div class="big">📭</div>Sin estudiantes</div></td></tr>';
+            tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><div class="big">ðŸ“­</div>Sin estudiantes</div></td></tr>';
             return;
           }
 
           tbody.innerHTML = students.map(s => `
             <tr>
               <td><code style="font-size: .7rem; color: var(--accent)">${s.id}</code></td>
-              <td>${s.document_id || '—'}</td>
+              <td>${s.document_id || 'â€”'}</td>
               <td>${`${s.nombre || ''} ${s.apellido || ''}`.trim() || s.email}</td>
-              <td>${s.program || '—'}</td>
+              <td>${s.program || 'â€”'}</td>
               <td>${s.email}</td>
               <td><span class="badge badge-activo">${s.status || 'activo'}</span></td>
               <td style="display:flex;gap:.4rem;flex-wrap:wrap;">
@@ -7250,33 +3648,33 @@
           `).join('');
         }
       } catch (e) {
-        showToast('✗ Error al cargar estudiantes', 'err');
+        showToast('âœ— Error al cargar estudiantes', 'err');
       }
     }
 
     function validateStudentData(firstName, lastName, documentId, email, program) {
-      // Validar cédula: 10 dígitos exactos
+      // Validar cÃ©dula: 10 dÃ­gitos exactos
       if (!/^\d{10}$/.test(documentId)) {
-        showToast('✗ La cédula debe tener exactamente 10 dígitos', 'err');
+        showToast('âœ— La cÃ©dula debe tener exactamente 10 dÃ­gitos', 'err');
         return false;
       }
-      // Validar nombre y apellido: mínimo 2 caracteres
+      // Validar nombre y apellido: mÃ­nimo 2 caracteres
       if (firstName.length < 2) {
-        showToast('✗ El nombre debe tener al menos 2 caracteres', 'err');
+        showToast('âœ— El nombre debe tener al menos 2 caracteres', 'err');
         return false;
       }
       if (lastName.length < 2) {
-        showToast('✗ El apellido debe tener al menos 2 caracteres', 'err');
+        showToast('âœ— El apellido debe tener al menos 2 caracteres', 'err');
         return false;
       }
       // Validar email: debe terminar en @ucc.edu.co
       if (!email.endsWith('@ucc.edu.co')) {
-        showToast('✗ El email debe ser institucional (@ucc.edu.co)', 'err');
+        showToast('âœ— El email debe ser institucional (@ucc.edu.co)', 'err');
         return false;
       }
       // Validar carrera seleccionada
       if (!program || program === 'Sin carrera') {
-        showToast('✗ Debes seleccionar una carrera válida', 'err');
+        showToast('âœ— Debes seleccionar una carrera vÃ¡lida', 'err');
         return false;
       }
       return true;
@@ -7334,7 +3732,7 @@
 
     async function createStudent() {
       if (USER_ROLE !== 'admin') {
-        showToast('✗ No autorizado para crear estudiantes', 'err');
+        showToast('âœ— No autorizado para crear estudiantes', 'err');
         return;
       }
 
@@ -7376,11 +3774,11 @@
           const authData = await res.json();
           const userId = authData?.user_id;
           if (!userId) {
-            throw new Error('No se recibió user_id al crear el usuario');
+            throw new Error('No se recibiÃ³ user_id al crear el usuario');
           }
 
           await createStudentRecord(userId, firstName, lastName, email, documentId, program);
-          showToast('✓ Estudiante creado', 'ok');
+          showToast('âœ“ Estudiante creado', 'ok');
           document.getElementById('student-first-name').value = '';
           document.getElementById('student-last-name').value = '';
           document.getElementById('student-document-id').value = '';
@@ -7390,10 +3788,10 @@
           loadStudents();
         } else {
           const data = await res.json().catch(() => null);
-          showToast(data?.detail || '✗ Error al crear', 'err');
+          showToast(data?.detail || 'âœ— Error al crear', 'err');
         }
       } catch (e) {
-        showToast(`✗ ${e?.message || 'Error de conexión'}`, 'err');
+        showToast(`âœ— ${e?.message || 'Error de conexiÃ³n'}`, 'err');
       }
     }
 
@@ -7421,13 +3819,13 @@
       }
 
       const data = await res.json().catch(() => null);
-      showToast(data?.detail || '✗ Error al crear usuario', 'err');
+      showToast(data?.detail || 'âœ— Error al crear usuario', 'err');
       return { ok: false, data: null };
     }
 
     async function createStudentFromAdminPanel() {
       if (USER_ROLE !== 'admin') {
-        showToast('✗ No autorizado para crear estudiantes', 'err');
+        showToast('âœ— No autorizado para crear estudiantes', 'err');
         return;
       }
 
@@ -7457,10 +3855,10 @@
         if (userId) {
           try {
             await createStudentRecord(userId, payload.first_name, payload.last_name, payload.email, payload.document_id, program);
-            showToast('✓ Estudiante creado desde gestión de usuarios', 'ok');
+            showToast('âœ“ Estudiante creado desde gestiÃ³n de usuarios', 'ok');
             loadStudents();
           } catch (e) {
-            showToast(`✗ ${e?.message || 'No se pudo registrar en student_service'}`, 'err');
+            showToast(`âœ— ${e?.message || 'No se pudo registrar en student_service'}`, 'err');
             return;
           }
         }
@@ -7473,7 +3871,7 @@
         const res = await fetch(`${API_BASE}/students/${studentId}`, { headers: getAuthHeaders() });
         if (!res.ok) {
           const data = await res.json().catch(() => null);
-          showToast(data?.detail || '✗ No se pudo cargar el estudiante', 'err');
+          showToast(data?.detail || 'âœ— No se pudo cargar el estudiante', 'err');
           return;
         }
         const student = await res.json();
@@ -7497,13 +3895,13 @@
         if (subtitle) subtitle.textContent = `Editando estudiante ID ${student.id}`;
         goTo('my-profile', document.getElementById('nav-my-profile'));
       } catch (e) {
-        showToast('✗ Error de conexión al cargar perfil', 'err');
+        showToast('âœ— Error de conexiÃ³n al cargar perfil', 'err');
       }
     }
 
     async function createAdministratorFromAdminPanel() {
       if (USER_ROLE !== 'admin') {
-        showToast('✗ No autorizado para crear administradores', 'err');
+        showToast('âœ— No autorizado para crear administradores', 'err');
         return;
       }
 
@@ -7523,29 +3921,29 @@
 
       const created = await createManagedUser(payload);
       if (created.ok) {
-        showToast('✓ Administrador creado correctamente', 'ok');
+        showToast('âœ“ Administrador creado correctamente', 'ok');
         resetAdminUserForm('admin-user');
       }
     }
 
     function validateTeacherData(firstName, lastName, documentId, email) {
-      // Validar cédula: 10 dígitos exactos
+      // Validar cÃ©dula: 10 dÃ­gitos exactos
       if (!/^\d{10}$/.test(documentId)) {
-        showToast('✗ La cédula debe tener exactamente 10 dígitos', 'err');
+        showToast('âœ— La cÃ©dula debe tener exactamente 10 dÃ­gitos', 'err');
         return false;
       }
-      // Validar nombre y apellido: mínimo 2 caracteres
+      // Validar nombre y apellido: mÃ­nimo 2 caracteres
       if (firstName.length < 2) {
-        showToast('✗ El nombre debe tener al menos 2 caracteres', 'err');
+        showToast('âœ— El nombre debe tener al menos 2 caracteres', 'err');
         return false;
       }
       if (lastName.length < 2) {
-        showToast('✗ El apellido debe tener al menos 2 caracteres', 'err');
+        showToast('âœ— El apellido debe tener al menos 2 caracteres', 'err');
         return false;
       }
       // Validar email: debe terminar en @ucc.edu.co
       if (!email.endsWith('@ucc.edu.co')) {
-        showToast('✗ El email debe ser institucional (@ucc.edu.co)', 'err');
+        showToast('âœ— El email debe ser institucional (@ucc.edu.co)', 'err');
         return false;
       }
       return true;
@@ -7553,7 +3951,7 @@
 
     async function createTeacherFromAdminPanel() {
       if (USER_ROLE !== 'admin') {
-        showToast('✗ No autorizado para crear docentes', 'err');
+        showToast('âœ— No autorizado para crear docentes', 'err');
         return;
       }
 
@@ -7583,10 +3981,10 @@
         if (userId) {
           try {
             await createTeacherRecord(userId, payload.first_name, payload.last_name, payload.email, payload.document_id, careerCode);
-            showToast('✓ Docente creado correctamente', 'ok');
+            showToast('âœ“ Docente creado correctamente', 'ok');
             loadTeachers();
           } catch (e) {
-            showToast(`✗ ${e?.message || 'No se pudo registrar en academic_service'}`, 'err');
+            showToast(`âœ— ${e?.message || 'No se pudo registrar en academic_service'}`, 'err');
             return;
           }
         }
@@ -7598,24 +3996,24 @@
 
     async function deleteStudent(id) {
       if (USER_ROLE !== 'admin') {
-        showToast('✗ No autorizado para eliminar estudiantes', 'err');
+        showToast('âœ— No autorizado para eliminar estudiantes', 'err');
         return;
       }
-      if (!confirm('¿Eliminar este estudiante?')) return;
+      if (!confirm('Â¿Eliminar este estudiante?')) return;
       try {
         const res = await fetch(`${API_BASE}/students/${id}`, {
           method: 'DELETE',
           headers: getAuthHeaders(),
         });
         if (res.ok) {
-          showToast('✓ Estudiante eliminado', 'ok');
+          showToast('âœ“ Estudiante eliminado', 'ok');
           loadStudents();
         } else {
           const data = await res.json().catch(() => null);
-          showToast(data?.detail || '✗ Error al eliminar', 'err');
+          showToast(data?.detail || 'âœ— Error al eliminar', 'err');
         }
       } catch (e) {
-        showToast('✗ Error de conexión', 'err');
+        showToast('âœ— Error de conexiÃ³n', 'err');
       }
     }
 
@@ -7657,7 +4055,7 @@
           }
           
           if (filtered.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="9"><div class="empty-state"><div class="big">📚</div>Sin materias para el filtro actual</div></td></tr>';
+            tbody.innerHTML = '<tr><td colspan="9"><div class="empty-state"><div class="big">ðŸ“š</div>Sin materias para el filtro actual</div></td></tr>';
             if (courseSelect) courseSelect.innerHTML = '<option value="">No hay cursos</option>';
             return;
           }
@@ -7676,7 +4074,7 @@
           }
         }
       } catch (e) {
-        showToast('✗ Error al cargar cursos', 'err');
+        showToast('âœ— Error al cargar cursos', 'err');
       }
     }
 
@@ -7689,7 +4087,7 @@
         const careerSelect = document.getElementById('course-career');
 
         if (!res.ok) {
-          tbody.innerHTML = '<tr><td colspan="8"><div class="empty-state"><div class="big">⚠</div>No se pueden cargar carreras</div></td></tr>';
+          tbody.innerHTML = '<tr><td colspan="8"><div class="empty-state"><div class="big">âš </div>No se pueden cargar carreras</div></td></tr>';
           careerSelect.innerHTML = '<option value="">Cargar carreras primero</option>';
           return;
         }
@@ -7697,7 +4095,7 @@
         const careers = await res.json();
         ACADEMIC_CAREERS = Array.isArray(careers) ? careers : [];
         if (!Array.isArray(careers) || careers.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="8"><div class="empty-state"><div class="big">📭</div>No hay carreras</div></td></tr>';
+          tbody.innerHTML = '<tr><td colspan="8"><div class="empty-state"><div class="big">ðŸ“­</div>No hay carreras</div></td></tr>';
           careerSelect.innerHTML = '<option value="">Sin carreras</option>';
           const filterSelect = document.getElementById('materias-career-filter');
           if (filterSelect) filterSelect.innerHTML = '<option value="">Todas las carreras</option>';
@@ -7745,23 +4143,23 @@
             <td><code style="font-size: .7rem; color: var(--accent)">${c.id}</code></td>
             <td>${c.code}</td>
             <td>${c.name}</td>
-            <td>${c.description || '—'}</td>
-            <td>${c.faculty || '—'}</td>
-            <td>${c.duration_semesters != null ? c.duration_semesters : '—'}</td>
-            <td>${c.modality || '—'}</td>
-            <td>${c.degree_title || '—'}</td>
+            <td>${c.description || 'â€”'}</td>
+            <td>${c.faculty || 'â€”'}</td>
+            <td>${c.duration_semesters != null ? c.duration_semesters : 'â€”'}</td>
+            <td>${c.modality || 'â€”'}</td>
+            <td>${c.degree_title || 'â€”'}</td>
           </tr>
         `).join('');
 
         careerSelect.innerHTML = '<option value="">Selecciona una carrera</option>' + careers.map(c => `
-          <option value="${c.id}">${c.code} — ${c.name}</option>
+          <option value="${c.id}">${c.code} â€” ${c.name}</option>
         `).join('');
 
         const filterSelect = document.getElementById('materias-career-filter');
         if (filterSelect) {
           const selectedValue = filterSelect.value;
           filterSelect.innerHTML = '<option value="">Todas las carreras</option>' + careers.map(c => `
-            <option value="${c.id}">${c.code} — ${c.name}</option>
+            <option value="${c.id}">${c.code} â€” ${c.name}</option>
           `).join('');
           if (selectedValue) {
             filterSelect.value = selectedValue;
@@ -7772,7 +4170,7 @@
         if (teacherCareerFilter) {
           const selectedCareer = teacherCareerFilter.value;
           teacherCareerFilter.innerHTML = '<option value="">Todas las carreras</option>' + careers.map(c => `
-            <option value="${c.code}">${c.code} — ${c.name}</option>
+            <option value="${c.code}">${c.code} â€” ${c.name}</option>
           `).join('');
           if (selectedCareer) {
             teacherCareerFilter.value = selectedCareer;
@@ -7783,7 +4181,7 @@
         if (studentsCareerFilter) {
           const selectedStudentCareer = studentsCareerFilter.value;
           studentsCareerFilter.innerHTML = '<option value="">Todas las carreras</option>' + careers.map(c => `
-            <option value="${c.name}">${c.code} — ${c.name}</option>
+            <option value="${c.name}">${c.code} â€” ${c.name}</option>
           `).join('');
           if (selectedStudentCareer) {
             studentsCareerFilter.value = selectedStudentCareer;
@@ -7794,7 +4192,7 @@
         if (assignCareerFilter) {
           const selectedAssignCareer = assignCareerFilter.value;
           assignCareerFilter.innerHTML = '<option value="">Todas las carreras</option>' + careers.map(c => `
-            <option value="${c.code}">${c.code} — ${c.name}</option>
+            <option value="${c.code}">${c.code} â€” ${c.name}</option>
           `).join('');
           if (selectedAssignCareer) assignCareerFilter.value = selectedAssignCareer;
         }
@@ -7803,7 +4201,7 @@
         if (assignCourseCareerFilter) {
           const selectedAssignCourseCareer = assignCourseCareerFilter.value;
           assignCourseCareerFilter.innerHTML = '<option value="">Todas las carreras</option>' + careers.map(c => `
-            <option value="${c.code}">${c.code} — ${c.name}</option>
+            <option value="${c.code}">${c.code} â€” ${c.name}</option>
           `).join('');
           if (selectedAssignCourseCareer) assignCourseCareerFilter.value = selectedAssignCourseCareer;
         }
@@ -7812,7 +4210,7 @@
         if (studentProgram) {
           const currentValue = studentProgram.value;
           studentProgram.innerHTML = '<option value="">Selecciona una carrera</option>' + careers.map(c => `
-            <option value="${c.name}">${c.code} — ${c.name}</option>
+            <option value="${c.name}">${c.code} â€” ${c.name}</option>
           `).join('');
           if (currentValue) studentProgram.value = currentValue;
         }
@@ -7821,7 +4219,7 @@
         if (adminStudentProgram) {
           const currentAdminValue = adminStudentProgram.value;
           adminStudentProgram.innerHTML = '<option value="">Selecciona una carrera</option>' + careers.map(c => `
-            <option value="${c.name}">${c.code} — ${c.name}</option>
+            <option value="${c.name}">${c.code} â€” ${c.name}</option>
           `).join('');
           if (currentAdminValue) adminStudentProgram.value = currentAdminValue;
         }
@@ -7830,7 +4228,7 @@
         if (teacherCareer) {
           const currentTeacherCareer = teacherCareer.value;
           teacherCareer.innerHTML = '<option value="">Sin carrera asignada</option>' + careers.map(c => `
-            <option value="${c.code}">${c.code} — ${c.name}</option>
+            <option value="${c.code}">${c.code} â€” ${c.name}</option>
           `).join('');
           if (currentTeacherCareer) teacherCareer.value = currentTeacherCareer;
         }
@@ -7839,7 +4237,7 @@
         if (adminTeacherCareer) {
           const currentAdminTeacherCareer = adminTeacherCareer.value;
           adminTeacherCareer.innerHTML = '<option value="">Sin carrera asignada</option>' + careers.map(c => `
-            <option value="${c.code}">${c.code} — ${c.name}</option>
+            <option value="${c.code}">${c.code} â€” ${c.name}</option>
           `).join('');
           if (currentAdminTeacherCareer) adminTeacherCareer.value = currentAdminTeacherCareer;
         }
@@ -7848,7 +4246,7 @@
         if (profileProgram) {
           const currentProfileProgram = profileProgram.value;
           profileProgram.innerHTML = '<option value="">Sin carrera</option>' + careers.map(c => `
-            <option value="${c.name}">${c.code} — ${c.name}</option>
+            <option value="${c.name}">${c.code} â€” ${c.name}</option>
           `).join('');
           if (currentProfileProgram) profileProgram.value = currentProfileProgram;
         }
@@ -7856,13 +4254,13 @@
         populateScheduleCareerSelects();
         populateAssignmentCourseSelect();
       } catch (e) {
-        showToast('✗ Error al cargar carreras', 'err');
+        showToast('âœ— Error al cargar carreras', 'err');
       }
     }
 
     async function createCareer() {
       if (USER_ROLE !== 'admin') {
-        showToast('✗ No autorizado para crear carreras', 'err');
+        showToast('âœ— No autorizado para crear carreras', 'err');
         return;
       }
 
@@ -7876,7 +4274,7 @@
       const degree_title = document.getElementById('career-degree-title').value;
 
       if (!code || !name) {
-        showToast('Completa código y nombre de la carrera', 'err');
+        showToast('Completa cÃ³digo y nombre de la carrera', 'err');
         return;
       }
 
@@ -7891,7 +4289,7 @@
         });
 
         if (res.ok) {
-          showToast('✓ Carrera creada', 'ok');
+          showToast('âœ“ Carrera creada', 'ok');
           document.getElementById('career-code').value = '';
           document.getElementById('career-name').value = '';
           document.getElementById('career-description').value = '';
@@ -7902,16 +4300,16 @@
           loadCareers();
         } else {
           const data = await res.json().catch(() => null);
-          showToast(data?.detail || '✗ Error al crear carrera', 'err');
+          showToast(data?.detail || 'âœ— Error al crear carrera', 'err');
         }
       } catch (e) {
-        showToast('✗ Error de conexión', 'err');
+        showToast('âœ— Error de conexiÃ³n', 'err');
       }
     }
 
     async function createCourse() {
       if (USER_ROLE !== 'admin') {
-        showToast('✗ No autorizado para crear materias', 'err');
+        showToast('âœ— No autorizado para crear materias', 'err');
         return;
       }
 
@@ -7953,7 +4351,7 @@
       });
 
       if (conflict) {
-        showToast(`✗ Salón ${location} ocupado el ${day} de ${conflict.start_time} a ${conflict.end_time}`, 'err');
+        showToast(`âœ— SalÃ³n ${location} ocupado el ${day} de ${conflict.start_time} a ${conflict.end_time}`, 'err');
         return;
       }
 
@@ -7979,7 +4377,7 @@
         });
 
         if (res.ok) {
-          showToast('✓ Materia creada', 'ok');
+          showToast('âœ“ Materia creada', 'ok');
           document.getElementById('course-code').value = '';
           document.getElementById('course-name').value = '';
           document.getElementById('course-credits').value = '';
@@ -7990,10 +4388,10 @@
           loadAcademic();
         } else {
           const data = await res.json().catch(() => null);
-          showToast(data?.detail || '✗ Error al crear materia', 'err');
+          showToast(data?.detail || 'âœ— Error al crear materia', 'err');
         }
       } catch (e) {
-        showToast('✗ Error de conexión', 'err');
+        showToast('âœ— Error de conexiÃ³n', 'err');
       }
     }
 
@@ -8032,7 +4430,7 @@
         const tbody = document.getElementById('teachers-tbody');
         const teacherSelect = document.getElementById('assign-teacher-select');
         if (!res.ok) {
-          tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state"><div class="big">⚠</div>No se pueden cargar docentes</div></td></tr>';
+          tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state"><div class="big">âš </div>No se pueden cargar docentes</div></td></tr>';
           if (teacherSelect) teacherSelect.innerHTML = '<option value="">No se pueden cargar docentes</option>';
           return;
         }
@@ -8040,7 +4438,7 @@
         const teachers = await res.json();
         TEACHERS = Array.isArray(teachers) ? teachers : [];
         if (TEACHERS.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state"><div class="big">📭</div>No hay docentes</div></td></tr>';
+          tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state"><div class="big">ðŸ“­</div>No hay docentes</div></td></tr>';
           if (teacherSelect) teacherSelect.innerHTML = '<option value="">No hay docentes</option>';
           return;
         }
@@ -8048,11 +4446,11 @@
         tbody.innerHTML = TEACHERS.map(t => `
           <tr>
             <td><code style="font-size: .7rem; color: var(--accent)">${t.id}</code></td>
-            <td>${t.document_id || '—'}</td>
-            <td>${t.first_name || '—'}</td>
-            <td>${t.last_name || '—'}</td>
-            <td>${(Array.isArray(t.career_codes) && t.career_codes.length) ? t.career_codes.join(', ') : '—'}</td>
-            <td>${t.email || '—'}</td>
+            <td>${t.document_id || 'â€”'}</td>
+            <td>${t.first_name || 'â€”'}</td>
+            <td>${t.last_name || 'â€”'}</td>
+            <td>${(Array.isArray(t.career_codes) && t.career_codes.length) ? t.career_codes.join(', ') : 'â€”'}</td>
+            <td>${t.email || 'â€”'}</td>
           </tr>
         `).join('');
 
@@ -8061,13 +4459,13 @@
 
         await loadScheduleTeachers();
       } catch (e) {
-        showToast('✗ Error al cargar docentes', 'err');
+        showToast('âœ— Error al cargar docentes', 'err');
       }
     }
 
     async function createTeacher() {
       if (USER_ROLE !== 'admin') {
-        showToast('✗ No autorizado para crear docentes', 'err');
+        showToast('âœ— No autorizado para crear docentes', 'err');
         return;
       }
 
@@ -8113,7 +4511,7 @@
             await createTeacherRecord(userId, firstName, lastName, email, documentId, careerCode);
           }
 
-          showToast('✓ Docente creado correctamente', 'ok');
+          showToast('âœ“ Docente creado correctamente', 'ok');
           document.getElementById('teacher-first-name').value = '';
           document.getElementById('teacher-last-name').value = '';
           document.getElementById('teacher-email').value = '';
@@ -8124,10 +4522,10 @@
           loadTeachers();
         } else {
           const data = await res.json().catch(() => null);
-          showToast(data?.detail || '✗ Error al crear docente', 'err');
+          showToast(data?.detail || 'âœ— Error al crear docente', 'err');
         }
       } catch (e) {
-        showToast('✗ Error de conexión', 'err');
+        showToast('âœ— Error de conexiÃ³n', 'err');
       }
     }
 
@@ -8140,14 +4538,14 @@
     function getCareerNameByCode(careerCode) {
       if (!careerCode) return '';
       const career = ACADEMIC_CAREERS.find(c => c.code === careerCode);
-      return career ? `${career.code} — ${career.name}` : careerCode;
+      return career ? `${career.code} â€” ${career.name}` : careerCode;
     }
 
     function getCareerNameByCourse(course) {
-      if (!course) return '—';
+      if (!course) return 'â€”';
       const career = ACADEMIC_CAREERS.find(c => Number(c.id) === Number(course.career_id));
-      if (!career) return '—';
-      return `${career.code} — ${career.name}`;
+      if (!career) return 'â€”';
+      return `${career.code} â€” ${career.name}`;
     }
 
     function getTeacherFixedCareerCode(teacher) {
@@ -8163,7 +4561,7 @@
     function getTeacherDisplayLabel(teacher) {
       if (!teacher) return 'Docente';
       const fullName = getTeacherDisplayName(teacher);
-      const doc = teacher.document_id || 'Sin cédula';
+      const doc = teacher.document_id || 'Sin cÃ©dula';
       const fixedCareer = teacher.career_code || (Array.isArray(teacher.career_codes) ? teacher.career_codes[0] : '');
       const careerLabel = getCareerNameByCode(fixedCareer);
       return careerLabel ? `${doc} - ${fullName} (${careerLabel})` : `${doc} - ${fullName}`;
@@ -8293,7 +4691,7 @@
 
       if (hint) {
         hint.textContent = filteredTeachers.length
-          ? 'Selecciona un docente para completar la asignación.'
+          ? 'Selecciona un docente para completar la asignaciÃ³n.'
           : 'No hay docentes disponibles para la carrera y materia seleccionadas.';
       }
     }
@@ -8311,7 +4709,7 @@
         if (courseSearchInput) courseSearchInput.disabled = true;
         courseSelect.disabled = true;
         courseSelect.innerHTML = '<option value="">Selecciona una carrera primero</option>';
-        if (detectedCareer) detectedCareer.textContent = 'Carrera detectada: —';
+        if (detectedCareer) detectedCareer.textContent = 'Carrera detectada: â€”';
         if (hint) {
           hint.textContent = 'Paso 1: selecciona carrera. Paso 2: elige materia. Paso 3: selecciona docente permitido.';
         }
@@ -8342,7 +4740,7 @@
 
       courseSelect.innerHTML = `<option value="">Selecciona un curso (${availableCourses.length})</option>` + availableCourses.map(course => {
         const careerCode = getCareerCodeByCourse(course);
-        const label = `${course.code || `Curso ${course.id}`} — ${course.name || 'Sin nombre'}`;
+        const label = `${course.code || `Curso ${course.id}`} â€” ${course.name || 'Sin nombre'}`;
         return `<option value="${course.id}">${label}${careerCode ? ` (${careerCode})` : ''}</option>`;
       }).join('');
 
@@ -8383,7 +4781,7 @@
       const selectedTeacher = teacherFilter?.value || '';
 
       if (careerFilter) {
-        const options = ACADEMIC_CAREERS.map(c => `<option value="${c.code}">${c.code} — ${c.name}</option>`).join('');
+        const options = ACADEMIC_CAREERS.map(c => `<option value="${c.code}">${c.code} â€” ${c.name}</option>`).join('');
         careerFilter.innerHTML = '<option value="">Todas las carreras</option>' + options;
         if (selectedCareer && ACADEMIC_CAREERS.some(c => c.code === selectedCareer)) {
           careerFilter.value = selectedCareer;
@@ -8410,7 +4808,7 @@
           filteredCourses,
           `Todos los cursos (${filteredCourses.length})`,
           c => c.id,
-          c => `${c.code || `Curso ${c.id}`} — ${c.name || 'Sin nombre'}`,
+          c => `${c.code || `Curso ${c.id}`} â€” ${c.name || 'Sin nombre'}`,
           true,
         );
         if (selectedCourse && filteredCourses.some(c => String(c.id) === String(selectedCourse))) {
@@ -8454,14 +4852,14 @@
         });
         const tbody = document.getElementById('assignments-tbody');
         if (!res.ok) {
-          tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state"><div class="big">⚠</div>No se pueden cargar asignaciones</div></td></tr>';
+          tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state"><div class="big">âš </div>No se pueden cargar asignaciones</div></td></tr>';
           return;
         }
 
         const assignments = await res.json();
         ASSIGNMENTS = Array.isArray(assignments) ? assignments : [];
 
-        // Completar metadatos de cursos que no estén en caché local para evitar etiquetas tipo "Curso 215".
+        // Completar metadatos de cursos que no estÃ©n en cachÃ© local para evitar etiquetas tipo "Curso 215".
         const missingCourseIds = [...new Set(ASSIGNMENTS.map(a => Number(a.course_id)))].filter(courseId => {
           return !COURSES.some(c => Number(c.id) === Number(courseId));
         });
@@ -8486,7 +4884,7 @@
         populateAssignmentTeacherSelect();
 
         if (ASSIGNMENTS.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state"><div class="big">📭</div>No hay asignaciones. Crea la primera desde el formulario superior.</div></td></tr>';
+          tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state"><div class="big">ðŸ“­</div>No hay asignaciones. Crea la primera desde el formulario superior.</div></td></tr>';
           return;
         }
 
@@ -8508,7 +4906,7 @@
         });
 
         if (filtered.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state"><div class="big">🔎</div>No hay resultados con esos filtros.</div></td></tr>';
+          tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state"><div class="big">ðŸ”Ž</div>No hay resultados con esos filtros.</div></td></tr>';
           return;
         }
 
@@ -8516,7 +4914,7 @@
           const teacher = TEACHERS.find(t => Number(t.id) === Number(a.teacher_id));
           const course = COURSES.find(c => Number(c.id) === Number(a.course_id));
           const teacherLabel = teacher ? getTeacherDisplayName(teacher) : `Docente ${a.teacher_id}`;
-          const courseLabel = course ? `${course.code || `Curso ${course.id}`} — ${course.name || 'Sin nombre'}` : `Curso ${a.course_id}`;
+          const courseLabel = course ? `${course.code || `Curso ${course.id}`} â€” ${course.name || 'Sin nombre'}` : `Curso ${a.course_id}`;
           const careerLabel = getCareerNameByCourse(course);
           return `
             <tr>
@@ -8532,16 +4930,16 @@
           `;
         }).join('');
       } catch (e) {
-        showToast('✗ Error al cargar asignaciones', 'err');
+        showToast('âœ— Error al cargar asignaciones', 'err');
       }
     }
 
     async function removeAssignment(assignmentId) {
       if (USER_ROLE !== 'admin') {
-        showToast('✗ No autorizado para eliminar asignaciones', 'err');
+        showToast('âœ— No autorizado para eliminar asignaciones', 'err');
         return;
       }
-      if (!confirm('¿Quitar esta asignación?')) return;
+      if (!confirm('Â¿Quitar esta asignaciÃ³n?')) return;
 
       try {
         const res = await fetch(`${API_BASE}/academic/api/assignments/${assignmentId}`, {
@@ -8549,15 +4947,15 @@
           headers: getAuthHeaders(),
         });
         if (res.ok) {
-          showToast('✓ Asignación eliminada', 'ok');
+          showToast('âœ“ AsignaciÃ³n eliminada', 'ok');
           await loadTeachers();
           await loadAssignments();
           return;
         }
         const data = await res.json().catch(() => null);
-        showToast(data?.detail || '✗ No se pudo eliminar la asignación', 'err');
+        showToast(data?.detail || 'âœ— No se pudo eliminar la asignaciÃ³n', 'err');
       } catch (e) {
-        showToast('✗ Error de conexión al eliminar', 'err');
+        showToast('âœ— Error de conexiÃ³n al eliminar', 'err');
       }
     }
 
@@ -8620,7 +5018,7 @@
 
     async function assignTeacher() {
       if (USER_ROLE !== 'admin') {
-        showToast('✗ No autorizado para asignar docentes', 'err');
+        showToast('âœ— No autorizado para asignar docentes', 'err');
         return;
       }
 
@@ -8639,18 +5037,18 @@
       const courseCareerCode = getCareerCodeByCourse(course);
 
       if (selectedCareer && courseCareerCode && selectedCareer !== courseCareerCode) {
-        showToast('✗ La materia no pertenece a la carrera seleccionada', 'err');
+        showToast('âœ— La materia no pertenece a la carrera seleccionada', 'err');
         return;
       }
 
       if (fixedCareerCode && fixedCareerCode !== courseCareerCode) {
-        showToast(`✗ ${fixedCareerCode}: este docente no puede dictar materias de ${courseCareerCode || 'otra carrera'}`, 'err');
+        showToast(`âœ— ${fixedCareerCode}: este docente no puede dictar materias de ${courseCareerCode || 'otra carrera'}`, 'err');
         return;
       }
 
       const exists = ASSIGNMENTS.some(a => Number(a.teacher_id) === teacherId && Number(a.course_id) === courseId);
       if (exists && !ASSIGNMENT_EDITING_ID) {
-        showToast('✗ Ese docente ya está asignado a esa materia', 'err');
+        showToast('âœ— Ese docente ya estÃ¡ asignado a esa materia', 'err');
         return;
       }
 
@@ -8673,20 +5071,20 @@
         });
 
         if (res.ok) {
-          showToast(ASSIGNMENT_EDITING_ID ? '✓ Asignación actualizada' : '✓ Docente asignado al curso', 'ok');
+          showToast(ASSIGNMENT_EDITING_ID ? 'âœ“ AsignaciÃ³n actualizada' : 'âœ“ Docente asignado al curso', 'ok');
           cancelAssignmentEdit();
           await loadTeachers();
           await loadAssignments();
         } else {
           const data = await res.json().catch(() => null);
-          showToast(data?.detail || '✗ Error al asignar', 'err');
+          showToast(data?.detail || 'âœ— Error al asignar', 'err');
         }
       } catch (e) {
-        showToast('✗ Error de conexión', 'err');
+        showToast('âœ— Error de conexiÃ³n', 'err');
       }
     }
 
-    // ─── Funciones para Matriculación de Estudiantes ─────────────────────────────
+    // â”€â”€â”€ Funciones para MatriculaciÃ³n de Estudiantes â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     let ALL_STUDENTS = [];
     let ALL_CAREERS = [];
     let ALL_COURSES_BY_CAREER = {};
@@ -8698,10 +5096,10 @@
       const studentSelect = document.getElementById('enroll-student-select');
       
       if (!searchTerm) {
-        // Si está vacío, mostrar todos
+        // Si estÃ¡ vacÃ­o, mostrar todos
         ALL_STUDENTS_FILTERED = [...ALL_STUDENTS];
       } else {
-        // Filtrar por cédula, nombre o email
+        // Filtrar por cÃ©dula, nombre o email
         ALL_STUDENTS_FILTERED = ALL_STUDENTS.filter(s => {
           const cedula = (s.document_id || '').toLowerCase();
           const nombre = (s.nombre || '').toLowerCase();
@@ -8722,14 +5120,14 @@
           const nombre = s.nombre || s.name || '';
           const apellido = s.apellido || '';
           const nombreCompleto = `${nombre} ${apellido}`.trim();
-          return `<option value="${s.id}">${cedula} — ${nombreCompleto} (${s.email})</option>`;
+          return `<option value="${s.id}">${cedula} â€” ${nombreCompleto} (${s.email})</option>`;
         }).join('');
       
       console.log(`Estudiantes encontrados: ${ALL_STUDENTS_FILTERED.length}`);
     }
 
     async function loadEnrollmentsData() {
-      console.log('🔄 Cargando datos de matriculación...');
+      console.log('ðŸ”„ Cargando datos de matriculaciÃ³n...');
       
       // Cargar carreras
       try {
@@ -8738,14 +5136,14 @@
         });
         if (resCareer.ok) {
           ALL_CAREERS = await resCareer.json();
-          console.log('✓ Carreras cargadas:', ALL_CAREERS.length);
+          console.log('âœ“ Carreras cargadas:', ALL_CAREERS.length);
           const careerSelect = document.getElementById('enroll-career-select');
           careerSelect.innerHTML = `<option value="">Selecciona una carrera</option>` + 
-            ALL_CAREERS.map(c => `<option value="${c.id}">${c.code} — ${c.name}</option>`).join('');
+            ALL_CAREERS.map(c => `<option value="${c.id}">${c.code} â€” ${c.name}</option>`).join('');
         }
       } catch (e) {
-        console.error('✗ Error al cargar carreras:', e);
-        showToast('✗ Error al cargar carreras', 'err');
+        console.error('âœ— Error al cargar carreras:', e);
+        showToast('âœ— Error al cargar carreras', 'err');
       }
 
       // Cargar estudiantes
@@ -8761,27 +5159,27 @@
           console.log('Datos estudiantes recibidos:', studentsData);
           ALL_STUDENTS = Array.isArray(studentsData) ? studentsData : studentsData.students || [];
           ALL_STUDENTS_FILTERED = [...ALL_STUDENTS]; // Inicializar filtrados
-          console.log('✓ Estudiantes cargados:', ALL_STUDENTS.length);
+          console.log('âœ“ Estudiantes cargados:', ALL_STUDENTS.length);
           
           filterStudents(); // Llenar el select inicial
         } else {
           const errorText = await resStudents.text();
           console.error('Error en respuesta de estudiantes:', errorText);
-          showToast('✗ Error al cargar estudiantes', 'err');
+          showToast('âœ— Error al cargar estudiantes', 'err');
         }
       } catch (e) {
-        console.error('✗ Error al cargar estudiantes:', e);
-        showToast('✗ Error al cargar estudiantes', 'err');
+        console.error('âœ— Error al cargar estudiantes:', e);
+        showToast('âœ— Error al cargar estudiantes', 'err');
       }
 
-      // Cargar todos los cursos al inicio (con auth y límite amplio)
+      // Cargar todos los cursos al inicio (con auth y lÃ­mite amplio)
       try {
         const resCourses = await fetch(`${API_BASE}/academic/api/courses/?limit=1000`, {
           headers: getAuthHeaders(),
         });
         if (resCourses.ok) {
           const allCourses = await resCourses.json();
-          console.log('✓ Cursos cargados:', allCourses.length);
+          console.log('âœ“ Cursos cargados:', allCourses.length);
           // Agrupar cursos por carrera
           ALL_COURSES_BY_CAREER = {};
           allCourses.forEach(course => {
@@ -8793,12 +5191,12 @@
           });
         } else {
           const errText = await resCourses.text().catch(() => '');
-          console.error('✗ Error al cargar cursos:', resCourses.status, errText);
-          showToast('✗ No se pudieron cargar cursos iniciales', 'err');
+          console.error('âœ— Error al cargar cursos:', resCourses.status, errText);
+          showToast('âœ— No se pudieron cargar cursos iniciales', 'err');
         }
       } catch (e) {
-        console.error('✗ Error al cargar cursos:', e);
-        showToast('✗ Error al cargar cursos', 'err');
+        console.error('âœ— Error al cargar cursos:', e);
+        showToast('âœ— Error al cargar cursos', 'err');
       }
 
       ENROLLMENTS_ADMIN_PAGE = 1;
@@ -8825,7 +5223,7 @@
           });
           if (!res.ok) {
             const errText = await res.text().catch(() => '');
-            console.error('✗ Error al consultar cursos por carrera:', res.status, errText);
+            console.error('âœ— Error al consultar cursos por carrera:', res.status, errText);
             courseSelect.innerHTML = `<option value="">No se pudieron cargar cursos</option>`;
             return;
           }
@@ -8834,8 +5232,8 @@
           ALL_COURSES_BY_CAREER[cacheKey] = Array.isArray(courses) ? courses : [];
           courses = ALL_COURSES_BY_CAREER[cacheKey];
         } catch (e) {
-          console.error('✗ Error al consultar cursos por carrera:', e);
-          courseSelect.innerHTML = `<option value="">Error de conexión al cargar cursos</option>`;
+          console.error('âœ— Error al consultar cursos por carrera:', e);
+          courseSelect.innerHTML = `<option value="">Error de conexiÃ³n al cargar cursos</option>`;
           return;
         }
       }
@@ -8850,16 +5248,16 @@
           const maxS = c.max_students;
           let badge = '';
           if (maxS) {
-            // Conteo real se carga en `renderEnrollmentCounts` — aquí solo mostramos el límite configurado
+            // Conteo real se carga en `renderEnrollmentCounts` â€” aquÃ­ solo mostramos el lÃ­mite configurado
             badge = ` [cupo: ${maxS}]`;
           }
-          return `<option value="${c.id}">${c.code || c.id} — ${c.name}${badge}</option>`;
+          return `<option value="${c.id}">${c.code || c.id} â€” ${c.name}${badge}</option>`;
         }).join('');
     }
 
     async function enrollStudent() {
       if (USER_ROLE !== 'admin') {
-        showToast('✗ No autorizado para matricular estudiantes', 'err');
+        showToast('âœ— No autorizado para matricular estudiantes', 'err');
         return;
       }
 
@@ -8886,7 +5284,7 @@
         });
 
         if (res.ok) {
-          showToast('✓ Estudiante matriculado correctamente', 'ok');
+          showToast('âœ“ Estudiante matriculado correctamente', 'ok');
           document.getElementById('enroll-student-select').value = '';
           document.getElementById('enroll-student-search').value = '';
           document.getElementById('enroll-course-select').value = '';
@@ -8895,10 +5293,10 @@
           loadEnrollmentsTable();
         } else {
           const data = await res.json().catch(() => null);
-          showToast(data?.detail || '✗ Error al matricular', 'err');
+          showToast(data?.detail || 'âœ— Error al matricular', 'err');
         }
       } catch (e) {
-        showToast('✗ Error de conexión', 'err');
+        showToast('âœ— Error de conexiÃ³n', 'err');
       }
     }
 
@@ -8908,7 +5306,7 @@
       const from = ENROLLMENTS_ADMIN_TOTAL === 0 ? 0 : ((ENROLLMENTS_ADMIN_PAGE - 1) * ENROLLMENTS_ADMIN_LIMIT) + 1;
       const to = Math.min(ENROLLMENTS_ADMIN_TOTAL, ENROLLMENTS_ADMIN_PAGE * ENROLLMENTS_ADMIN_LIMIT);
       const totalPages = Math.max(1, Math.ceil(ENROLLMENTS_ADMIN_TOTAL / ENROLLMENTS_ADMIN_LIMIT));
-      label.textContent = `Página ${ENROLLMENTS_ADMIN_PAGE}/${totalPages} · ${from}-${to} de ${ENROLLMENTS_ADMIN_TOTAL}`;
+      label.textContent = `PÃ¡gina ${ENROLLMENTS_ADMIN_PAGE}/${totalPages} Â· ${from}-${to} de ${ENROLLMENTS_ADMIN_TOTAL}`;
     }
 
     async function loadEnrollmentsTable(page = ENROLLMENTS_ADMIN_PAGE) {
@@ -8921,7 +5319,7 @@
         const tbody = document.getElementById('enrollments-admin-tbody');
 
         if (!res.ok) {
-          tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><div class="big">⚠</div>No se pueden cargar matriculaciones</div></td></tr>';
+          tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><div class="big">âš </div>No se pueden cargar matriculaciones</div></td></tr>';
           return;
         }
 
@@ -8932,7 +5330,7 @@
         updateEnrollmentsAdminPager();
 
         if (!Array.isArray(enrollments) || enrollments.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><div class="big">📭</div>No hay matriculaciones</div></td></tr>';
+          tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><div class="big">ðŸ“­</div>No hay matriculaciones</div></td></tr>';
           return;
         }
 
@@ -8943,7 +5341,7 @@
                        || ALL_STUDENTS.find(s => s.user_id === e.student_id);
           const cedula = student?.document_id || 'N/A';
           const nombreCompleto = student ? `${student.nombre || ''} ${student.apellido || ''}`.trim() || student.email : `ID ${e.student_id}`;
-          const email = student?.email || '—';
+          const email = student?.email || 'â€”';
           const courseName = course?.name || `Curso ${e.course_id}`;
           const realStudentId = student?.id || null;
 
@@ -8957,7 +5355,7 @@
               <td><span class="badge badge-activo">${e.status || 'activa'}</span></td>
               <td>${new Date(e.enrollment_date).toLocaleDateString('es-CO')}</td>
               <td style="display:flex;gap:.4rem;flex-wrap:wrap">
-                <button class="btn btn-danger btn-sm" onclick="deleteEnrollment(${e.id})">Eliminar matrícula</button>
+                <button class="btn btn-danger btn-sm" onclick="deleteEnrollment(${e.id})">Eliminar matrÃ­cula</button>
                 ${realStudentId ? `<button class="btn btn-secondary btn-sm" onclick="confirmDeleteStudent(${realStudentId}, '${nombreCompleto.replace(/'/g, "&apos;")}')">Eliminar estudiante</button>` : ''}
               </td>
             </tr>
@@ -8966,17 +5364,17 @@
 
         tbody.innerHTML = rows.join('');
       } catch (e) {
-        showToast('✗ Error al cargar matriculaciones', 'err');
+        showToast('âœ— Error al cargar matriculaciones', 'err');
       }
     }
 
     async function deleteEnrollment(enrollmentId) {
       if (USER_ROLE !== 'admin') {
-        showToast('✗ No autorizado para eliminar matriculaciones', 'err');
+        showToast('âœ— No autorizado para eliminar matriculaciones', 'err');
         return;
       }
 
-      if (!confirm('¿Eliminar esta matriculación?')) return;
+      if (!confirm('Â¿Eliminar esta matriculaciÃ³n?')) return;
 
       try {
         const res = await fetch(`${API_BASE}/enrollments/${enrollmentId}`, {
@@ -8985,20 +5383,20 @@
         });
 
         if (res.ok) {
-          showToast('✓ Matriculación eliminada', 'ok');
+          showToast('âœ“ MatriculaciÃ³n eliminada', 'ok');
           loadEnrollmentsTable(ENROLLMENTS_ADMIN_PAGE);
         } else {
           const data = await res.json().catch(() => null);
-          showToast(data?.detail || '✗ Error al eliminar', 'err');
+          showToast(data?.detail || 'âœ— Error al eliminar', 'err');
         }
       } catch (e) {
-        showToast('✗ Error de conexión', 'err');
+        showToast('âœ— Error de conexiÃ³n', 'err');
       }
     }
 
     async function confirmDeleteStudent(studentId, nombre) {
-      if (USER_ROLE !== 'admin') { showToast('✗ No autorizado', 'err'); return; }
-      if (!confirm(`¿Eliminar permanentemente al estudiante "${nombre}"?\nEsta acción no se puede deshacer.`)) return;
+      if (USER_ROLE !== 'admin') { showToast('âœ— No autorizado', 'err'); return; }
+      if (!confirm(`Â¿Eliminar permanentemente al estudiante "${nombre}"?\nEsta acciÃ³n no se puede deshacer.`)) return;
       await deleteStudent(studentId);
       loadEnrollmentsData();
       loadStudentsManagement();
@@ -9007,36 +5405,36 @@
     async function loadStudentsManagement() {
       const tbody = document.getElementById('students-mgmt-tbody');
       if (!tbody) return;
-      tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><div class="big">◌</div>Cargando...</div></td></tr>';
+      tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><div class="big">â—Œ</div>Cargando...</div></td></tr>';
       try {
         const res = await fetch(`${API_BASE}/students/`, { headers: getAuthHeaders() });
-        if (!res.ok) { tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><div class="big">⚠</div>Error al cargar estudiantes.</div></td></tr>'; return; }
+        if (!res.ok) { tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><div class="big">âš </div>Error al cargar estudiantes.</div></td></tr>'; return; }
         const students = await res.json();
         const list = Array.isArray(students) ? students : students.students || [];
-        if (list.length === 0) { tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><div class="big">📭</div>No hay estudiantes.</div></td></tr>'; return; }
+        if (list.length === 0) { tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><div class="big">ðŸ“­</div>No hay estudiantes.</div></td></tr>'; return; }
         tbody.innerHTML = list.map(s => {
           const nombre = `${s.nombre || ''} ${s.apellido || ''}`.trim() || s.email;
           const estadoBadge = s.status === 'activo'
             ? `<span class="badge badge-activo">${s.status}</span>`
-            : `<span class="badge" style="background:#666">${s.status || '—'}</span>`;
+            : `<span class="badge" style="background:#666">${s.status || 'â€”'}</span>`;
           return `<tr>
             <td><code style="font-size:.7rem;color:var(--accent)">${s.id}</code></td>
-            <td>${s.document_id || '—'}</td>
+            <td>${s.document_id || 'â€”'}</td>
             <td>${nombre}</td>
-            <td>${s.email || '—'}</td>
-            <td>${s.program || '—'}</td>
+            <td>${s.email || 'â€”'}</td>
+            <td>${s.program || 'â€”'}</td>
             <td>${estadoBadge}</td>
             <td><button class="btn btn-danger btn-sm" onclick="confirmDeleteStudent(${s.id}, '${nombre.replace(/'/g, '&apos;')}')">Eliminar</button></td>
           </tr>`;
         }).join('');
       } catch (e) {
-        tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><div class="big">⚠</div>Error de conexión.</div></td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><div class="big">âš </div>Error de conexiÃ³n.</div></td></tr>';
       }
     }
 
-    // ═══════════════════════════════════════════════════════
+    // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
     // BUZONES DE ACTIVIDADES (dentro de grades service)
-    // ═══════════════════════════════════════════════════════
+    // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
     let currentBuzonId = null;
     let currentBuzonTitle = '';
 
@@ -9060,9 +5458,9 @@
         }
 
         if (!Array.isArray(courses)) return;
-        const opts = courses.map(c => `<option value="${c.id}">${c.code ? c.code + ' — ' : ''}${c.name}</option>`).join('');
-        const placeholder = '<option value="">— Selecciona un curso —</option>';
-        const studentPlaceholder = '<option value="">— Todos tus cursos —</option>';
+        const opts = courses.map(c => `<option value="${c.id}">${c.code ? c.code + ' â€” ' : ''}${c.name}</option>`).join('');
+        const placeholder = '<option value="">â€” Selecciona un curso â€”</option>';
+        const studentPlaceholder = '<option value="">â€” Todos tus cursos â€”</option>';
 
         if (USER_ROLE === 'docente') {
           ['buz-teacher-course', 'cb-course-id'].forEach(id => {
@@ -9091,13 +5489,13 @@
     }
 
     function openCreateBuzonModal() {
-      // Sincronizar courses en modal también (por si aún no cargaron)
+      // Sincronizar courses en modal tambiÃ©n (por si aÃºn no cargaron)
       const src = document.getElementById('buz-teacher-course');
       const dst = document.getElementById('cb-course-id');
       if (src && dst && src.options.length > 1 && dst.options.length <= 1) {
         dst.innerHTML = src.innerHTML;
       }
-      // Pre-seleccionar el curso del filtro si ya se eligió uno
+      // Pre-seleccionar el curso del filtro si ya se eligiÃ³ uno
       if (src && src.value && dst) dst.value = src.value;
       document.getElementById('modal-create-buzon').style.display = 'flex';
     }
@@ -9108,7 +5506,7 @@
       let url = `${API_BASE}/grades/buzones`;
       if (courseId) url += `?course_id=${courseId}`;
 
-      tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state"><div class="big">◌</div>Cargando...</div></td></tr>';
+      tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state"><div class="big">â—Œ</div>Cargando...</div></td></tr>';
       try {
         const res = await apiFetch(url);
         if (!res.ok) {
@@ -9117,23 +5515,23 @@
         }
         const data = await res.json();
         if (!data.length) {
-          tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state"><div class="big">📭</div>No hay buzones.</div></td></tr>';
+          tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state"><div class="big">ðŸ“­</div>No hay buzones.</div></td></tr>';
           return;
         }
         tbody.innerHTML = data.map(b => {
-          const due = b.due_date ? new Date(b.due_date).toLocaleString('es-CO') : '—';
-          const pesoLabel = b.weight > 0 ? `<span style="color:#a78bfa;font-weight:600;">${b.weight}%</span>` : '<span style="color:var(--muted);">—</span>';
+          const due = b.due_date ? new Date(b.due_date).toLocaleString('es-CO') : 'â€”';
+          const pesoLabel = b.weight > 0 ? `<span style="color:#a78bfa;font-weight:600;">${b.weight}%</span>` : '<span style="color:var(--muted);">â€”</span>';
           return `<tr>
             <td>${b.id}</td>
             <td>${b.title}</td>
             <td>${due}</td>
             <td>${pesoLabel}</td>
-            <td><button class="btn btn-secondary btn-sm" onclick="loadSubmissions(${b.id}, '${b.title.replace(/'/g, '&apos;')}')">Ver envíos</button></td>
+            <td><button class="btn btn-secondary btn-sm" onclick="loadSubmissions(${b.id}, '${b.title.replace(/'/g, '&apos;')}')">Ver envÃ­os</button></td>
             <td><button class="btn btn-danger btn-sm" onclick="deleteBuzon(${b.id})">Eliminar</button></td>
           </tr>`;
         }).join('');
       } catch {
-        tbody.innerHTML = '<tr><td colspan="6">Error de conexión</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6">Error de conexiÃ³n</td></tr>';
       }
     }
 
@@ -9143,7 +5541,7 @@
       const dueDateRaw = document.getElementById('cb-due-date').value;
       const weight = parseFloat(document.getElementById('cb-weight').value) || 0;
       if (!courseId || !title) {
-        showToast('✗ Debes seleccionar un curso y escribir un título', 'err');
+        showToast('âœ— Debes seleccionar un curso y escribir un tÃ­tulo', 'err');
         return;
       }
 
@@ -9162,10 +5560,10 @@
         });
         if (!res.ok) {
           const data = await res.json().catch(() => null);
-          showToast(data?.detail || '✗ Error creando buzón', 'err');
+          showToast(data?.detail || 'âœ— Error creando buzÃ³n', 'err');
           return;
         }
-        showToast('✓ Buzón creado', 'ok');
+        showToast('âœ“ BuzÃ³n creado', 'ok');
         document.getElementById('modal-create-buzon').style.display = 'none';
         const filterSel = document.getElementById('buz-teacher-course');
         if (filterSel) filterSel.value = String(courseId);
@@ -9175,21 +5573,21 @@
         clearCalPicker('cb-due-date');
         loadTeacherBuzones();
       } catch {
-        showToast('✗ Error de conexión', 'err');
+        showToast('âœ— Error de conexiÃ³n', 'err');
       }
     }
 
     async function loadDefinitivas() {
       const courseId = document.getElementById('buz-teacher-course').value;
       if (!courseId) {
-        showToast('✗ Selecciona un curso primero', 'err');
+        showToast('âœ— Selecciona un curso primero', 'err');
         return;
       }
       const panel = document.getElementById('definitivas-panel');
       const tableWrap = document.getElementById('definitivas-table-wrap');
       const warning = document.getElementById('definitivas-weight-warning');
       panel.style.display = '';
-      tableWrap.innerHTML = '<div class="empty-state"><div class="big">◌</div>Cargando...</div>';
+      tableWrap.innerHTML = '<div class="empty-state"><div class="big">â—Œ</div>Cargando...</div>';
       warning.style.display = 'none';
 
       try {
@@ -9202,22 +5600,22 @@
         const data = await res.json();
 
         if (!data.boxes || data.boxes.length === 0) {
-          tableWrap.innerHTML = '<div class="empty-state"><div class="big">📭</div>No hay buzones con peso > 0 en este curso.</div>';
+          tableWrap.innerHTML = '<div class="empty-state"><div class="big">ðŸ“­</div>No hay buzones con peso > 0 en este curso.</div>';
           return;
         }
 
         // Advertencia si los pesos no suman 100
         if (Math.abs(data.total_weight - 100) > 0.5) {
           warning.style.display = '';
-          warning.textContent = `⚠ Los pesos suman ${data.total_weight}%, no 100%. La nota definitiva será proporcional al peso cubierto.`;
+          warning.textContent = `âš  Los pesos suman ${data.total_weight}%, no 100%. La nota definitiva serÃ¡ proporcional al peso cubierto.`;
         }
 
-        // Cabecera dinámica
+        // Cabecera dinÃ¡mica
         const boxCols = data.boxes.map(b =>
           `<th style="color:#a78bfa;">${b.title}<br><small style="font-weight:normal;font-size:.7rem;">${b.weight}%</small></th>`
         ).join('');
 
-        // Filas — necesitamos nombres de estudiantes
+        // Filas â€” necesitamos nombres de estudiantes
         const studentIds = [...new Set(data.students.map(s => s.student_id))];
         const nameMap = {};
         await Promise.all(studentIds.map(async id => {
@@ -9233,14 +5631,14 @@
             const nota = det?.score;
             const cell = nota !== null && nota !== undefined
               ? `<span style="color:${nota >= 3 ? '#4ade80' : '#f87171'};font-weight:600;">${parseFloat(nota).toFixed(1)}</span>`
-              : '<span style="color:var(--muted);">—</span>';
+              : '<span style="color:var(--muted);">â€”</span>';
             return `<td style="text-align:center;">${cell}</td>`;
           }).join('');
 
           const defColor = s.nota_final >= 3 ? '#4ade80' : '#f87171';
           const defCell = s.nota_final !== null && s.nota_final !== undefined
             ? `<span style="color:${defColor};font-weight:700;font-size:1.05rem;">${parseFloat(s.nota_final).toFixed(1)}</span>`
-            : '<span style="color:var(--muted);">—</span>';
+            : '<span style="color:var(--muted);">â€”</span>';
 
           const incomplete = !s.completo
             ? `<br><small style="color:#fbbf24;font-size:.7rem;">cubre ${s.covered_weight}%</small>`
@@ -9254,7 +5652,7 @@
         }).join('');
 
         if (!rows) {
-          tableWrap.innerHTML = '<div class="empty-state"><div class="big">📭</div>Aún no hay calificaciones registradas.</div>';
+          tableWrap.innerHTML = '<div class="empty-state"><div class="big">ðŸ“­</div>AÃºn no hay calificaciones registradas.</div>';
           return;
         }
 
@@ -9267,43 +5665,43 @@
           <tbody>${rows}</tbody>
         </table>`;
       } catch (e) {
-        tableWrap.innerHTML = `<p style="color:#f87171;">Error de conexión</p>`;
+        tableWrap.innerHTML = `<p style="color:#f87171;">Error de conexiÃ³n</p>`;
       }
     }
 
     async function deleteBuzon(id) {
-      if (!confirm('¿Eliminar este buzón y sus envíos?')) return;
+      if (!confirm('Â¿Eliminar este buzÃ³n y sus envÃ­os?')) return;
       try {
         const res = await apiFetch(`${API_BASE}/grades/buzones/${id}`, { method: 'DELETE' });
         if (res.ok || res.status === 204) {
-          showToast('✓ Buzón eliminado', 'ok');
+          showToast('âœ“ BuzÃ³n eliminado', 'ok');
           loadTeacherBuzones();
           return;
         }
         const data = await res.json().catch(() => null);
-        showToast(data?.detail || '✗ No se pudo eliminar', 'err');
+        showToast(data?.detail || 'âœ— No se pudo eliminar', 'err');
       } catch {
-        showToast('✗ Error de conexión', 'err');
+        showToast('âœ— Error de conexiÃ³n', 'err');
       }
     }
 
     async function loadSubmissions(boxId, title) {
       currentBuzonId = boxId;
       currentBuzonTitle = title;
-      document.getElementById('buzon-submissions-title').textContent = `Envíos — ${title}`;
+      document.getElementById('buzon-submissions-title').textContent = `EnvÃ­os â€” ${title}`;
       document.getElementById('buzon-submissions-panel').style.display = '';
 
       const tbody = document.getElementById('submissions-tbody');
-      tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><div class="big">◌</div>Cargando...</div></td></tr>';
+      tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><div class="big">â—Œ</div>Cargando...</div></td></tr>';
       try {
         const res = await apiFetch(`${API_BASE}/grades/buzones/${boxId}/submissions`);
         if (!res.ok) {
-          tbody.innerHTML = '<tr><td colspan="7">Error cargando envíos</td></tr>';
+          tbody.innerHTML = '<tr><td colspan="7">Error cargando envÃ­os</td></tr>';
           return;
         }
         const rows = await res.json();
         if (!rows.length) {
-          tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><div class="big">📭</div>Sin envíos.</div></td></tr>';
+          tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><div class="big">ðŸ“­</div>Sin envÃ­os.</div></td></tr>';
           return;
         }
         // Pre-cargar nombres de estudiantes en paralelo
@@ -9314,10 +5712,10 @@
           else studentNames[s.student_id] = `#${s.student_id}`;
         }));
         tbody.innerHTML = rows.map(s => {
-          const date = s.submitted_at ? new Date(s.submitted_at).toLocaleString('es-CO') : '—';
+          const date = s.submitted_at ? new Date(s.submitted_at).toLocaleString('es-CO') : 'â€”';
           const fileLink = s.file_name
-            ? `<a class="btn btn-secondary btn-sm" href="${API_BASE}/grades/submissions/${s.id}/file">⬇ ${s.file_name}</a>`
-            : '—';
+            ? `<a class="btn btn-secondary btn-sm" href="${API_BASE}/grades/submissions/${s.id}/file">â¬‡ ${s.file_name}</a>`
+            : 'â€”';
           const score = s.score == null
             ? '<span style="color:var(--muted);font-style:italic;">Pendiente</span>'
             : `<span style="font-weight:700;font-size:1rem;color:var(--accent)">${parseFloat(s.score).toFixed(1)}</span>`;
@@ -9329,14 +5727,14 @@
             <td>${s.id}</td>
             <td>${nombreEstudiante}</td>
             <td>${date}</td>
-            <td>${s.student_comment || '—'}</td>
+            <td>${s.student_comment || 'â€”'}</td>
             <td>${fileLink}</td>
             <td>${score}${comment}</td>
             <td><button class="btn btn-primary btn-sm" onclick="openGradeModal(${s.id}, ${s.score ?? ''})">Calificar</button></td>
           </tr>`;
         }).join('');
       } catch {
-        tbody.innerHTML = '<tr><td colspan="7">Error de conexión</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7">Error de conexiÃ³n</td></tr>';
       }
     }
 
@@ -9352,7 +5750,7 @@
       const score = parseFloat(document.getElementById('grade-score').value);
       const teacherComment = document.getElementById('grade-comment').value.trim() || null;
       if (Number.isNaN(score) || score < 0 || score > 5) {
-        showToast('✗ La nota debe estar entre 0.0 y 5.0', 'err');
+        showToast('âœ— La nota debe estar entre 0.0 y 5.0', 'err');
         return;
       }
 
@@ -9364,14 +5762,14 @@
         });
         if (!res.ok) {
           const data = await res.json().catch(() => null);
-          showToast(data?.detail || '✗ No se pudo calificar', 'err');
+          showToast(data?.detail || 'âœ— No se pudo calificar', 'err');
           return;
         }
-        showToast('✓ Calificación guardada', 'ok');
+        showToast('âœ“ CalificaciÃ³n guardada', 'ok');
         document.getElementById('modal-grade-submission').style.display = 'none';
         if (currentBuzonId) loadSubmissions(currentBuzonId, currentBuzonTitle);
       } catch {
-        showToast('✗ Error de conexión', 'err');
+        showToast('âœ— Error de conexiÃ³n', 'err');
       }
     }
 
@@ -9402,9 +5800,9 @@
     }
 
     function formatDateTimeEs(dateValue) {
-      if (!dateValue) return 'Sin fecha límite';
+      if (!dateValue) return 'Sin fecha lÃ­mite';
       const date = new Date(dateValue);
-      if (Number.isNaN(date.getTime())) return 'Sin fecha límite';
+      if (Number.isNaN(date.getTime())) return 'Sin fecha lÃ­mite';
       return date.toLocaleString('es-CO', {
         year: 'numeric', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit'
       });
@@ -9425,18 +5823,18 @@
 
       if (due.getTime() < now.getTime()) return { key: 'overdue', label: 'Vencida', rank: 0 };
       if (diffDays === 0) return { key: 'today', label: 'Vence hoy', rank: 1 };
-      if (diffDays <= 3) return { key: 'upcoming', label: 'Próxima', rank: 2 };
+      if (diffDays <= 3) return { key: 'upcoming', label: 'PrÃ³xima', rank: 2 };
       return { key: 'pending', label: 'Pendiente', rank: 3 };
     }
 
     function getRelativeDueText(dueDate, submission) {
       if (submission?.score != null) return `Calificada ${submission.graded_at ? formatDateTimeEs(submission.graded_at) : ''}`.trim();
       if (submission?.submitted_at) return `Entregada ${formatDateTimeEs(submission.submitted_at)}`;
-      if (!dueDate) return 'Sin fecha límite';
+      if (!dueDate) return 'Sin fecha lÃ­mite';
 
       const due = new Date(dueDate);
       const now = new Date();
-      if (Number.isNaN(due.getTime())) return 'Sin fecha límite';
+      if (Number.isNaN(due.getTime())) return 'Sin fecha lÃ­mite';
 
       const diffMs = due.getTime() - now.getTime();
       const diffDays = Math.floor(diffMs / 86400000);
@@ -9444,12 +5842,12 @@
 
       if (diffMs < 0) {
         const overdueDays = Math.max(1, Math.ceil(Math.abs(diffMs) / 86400000));
-        return overdueDays === 1 ? 'Venció hace 1 día' : `Venció hace ${overdueDays} días`;
+        return overdueDays === 1 ? 'VenciÃ³ hace 1 dÃ­a' : `VenciÃ³ hace ${overdueDays} dÃ­as`;
       }
       if (sameDay) return `Vence hoy a las ${formatTime(due.toTimeString().slice(0, 5))}`;
       if (diffDays <= 0) return 'Vence pronto';
-      if (diffDays === 1) return 'Vence en 1 día';
-      return `Vence en ${diffDays} días`;
+      if (diffDays === 1) return 'Vence en 1 dÃ­a';
+      return `Vence en ${diffDays} dÃ­as`;
     }
 
     function renderStudentActivityKpis(items) {
@@ -9495,21 +5893,21 @@
       if (!container) return;
       if (!items.length) {
         container.innerHTML = hasFilters
-          ? '<div class="empty-state"><div class="big">🔎</div>No hay resultados con los filtros actuales.</div>'
-          : '<div class="empty-state"><div class="big">📭</div>No tienes actividades activas en este momento.</div>';
+          ? '<div class="empty-state"><div class="big">ðŸ”Ž</div>No hay resultados con los filtros actuales.</div>'
+          : '<div class="empty-state"><div class="big">ðŸ“­</div>No tienes actividades activas en este momento.</div>';
         return;
       }
 
       container.innerHTML = items.map(item => {
         const safeTitle = String(item.title || '').replace(/'/g, '&apos;');
         const fileButton = item.submission?.file_name
-          ? `<a class="btn btn-secondary btn-sm" href="${API_BASE}/grades/submissions/${item.submission.id}/file">⬇ ${escapeHtml(item.submission.file_name)}</a>`
+          ? `<a class="btn btn-secondary btn-sm" href="${API_BASE}/grades/submissions/${item.submission.id}/file">â¬‡ ${escapeHtml(item.submission.file_name)}</a>`
           : '';
         const mainActionLabel = item.submission ? 'Reemplazar entrega' : 'Subir entrega';
         const feedback = item.submission
           ? `<div class="activity-card-feedback">
-              <div><strong>Tu comentario:</strong> ${escapeHtml(item.submission.student_comment || '—')}</div>
-              <div><strong>Retroalimentación:</strong> ${escapeHtml(item.submission.teacher_comment || '—')}</div>
+              <div><strong>Tu comentario:</strong> ${escapeHtml(item.submission.student_comment || 'â€”')}</div>
+              <div><strong>RetroalimentaciÃ³n:</strong> ${escapeHtml(item.submission.teacher_comment || 'â€”')}</div>
               <div><strong>Nota:</strong> ${item.submission.score == null ? 'Pendiente' : escapeHtml(String(item.submission.score))}</div>
             </div>`
           : '';
@@ -9524,7 +5922,7 @@
           </div>
           <div class="activity-card-meta">
             <div class="activity-meta-block">
-              <div class="activity-meta-label">Fecha límite</div>
+              <div class="activity-meta-label">Fecha lÃ­mite</div>
               <div class="activity-meta-value">${escapeHtml(item.dueLabel)}</div>
             </div>
             <div class="activity-meta-block">
@@ -9590,7 +5988,7 @@
           const status = getDeadlineTone(box.due_date, submission);
           const dueLabel = formatDateTimeEs(box.due_date);
           const relativeDue = getRelativeDueText(box.due_date, submission);
-          const courseLabel = course ? `${course.code ? `${course.code} — ` : ''}${course.name}` : `Curso ${box.course_id}`;
+          const courseLabel = course ? `${course.code ? `${course.code} â€” ` : ''}${course.name}` : `Curso ${box.course_id}`;
           return {
             ...box,
             submission,
@@ -9601,8 +5999,8 @@
             courseLabel,
             title: box.title || 'Actividad',
             summaryText: submission
-              ? (submission.score == null ? 'Ya enviaste esta actividad. Puedes reemplazar el archivo o revisar la retroalimentación.' : 'Esta actividad ya fue calificada. Revisa la retroalimentación del docente.')
-              : 'Actividad pendiente. Sube tu entrega antes de la fecha límite para evitar retrasos.',
+              ? (submission.score == null ? 'Ya enviaste esta actividad. Puedes reemplazar el archivo o revisar la retroalimentaciÃ³n.' : 'Esta actividad ya fue calificada. Revisa la retroalimentaciÃ³n del docente.')
+              : 'Actividad pendiente. Sube tu entrega antes de la fecha lÃ­mite para evitar retrasos.',
           };
         });
 
@@ -9624,7 +6022,7 @@
         filtered = sortStudentActivities(filtered, sortMode);
         renderStudentActivityCards(filtered, Boolean(courseId || statusFilter || searchFilter));
       } catch {
-        container.innerHTML = '<div style="color:var(--danger)">Error de conexión</div>';
+        container.innerHTML = '<div style="color:var(--danger)">Error de conexiÃ³n</div>';
       }
     }
 
@@ -9652,21 +6050,21 @@
         });
         if (!res.ok) {
           const data = await res.json().catch(() => null);
-          showToast(data?.detail || '✗ No se pudo enviar', 'err');
+          showToast(data?.detail || 'âœ— No se pudo enviar', 'err');
           return;
         }
-        showToast('✓ Envío guardado', 'ok');
+        showToast('âœ“ EnvÃ­o guardado', 'ok');
         document.getElementById('modal-submit-work').style.display = 'none';
         loadStudentBuzones();
       } catch {
-        showToast('✗ Error de conexión', 'err');
+        showToast('âœ— Error de conexiÃ³n', 'err');
       }
     }
 
     function saveGatewayUrl() {
       const url = document.getElementById('gw-url-input').value;
       localStorage.setItem('gw_url', url);
-      showToast('✓ URL guardada', 'ok');
+      showToast('âœ“ URL guardada', 'ok');
     }
 
     function logout() {
@@ -9674,7 +6072,7 @@
       localStorage.removeItem('user_role');
       localStorage.removeItem('last_section');
       localStorage.removeItem('savedEmail');
-      showToast('✓ Sesión cerrada', 'ok');
+      showToast('âœ“ SesiÃ³n cerrada', 'ok');
       setTimeout(() => {
         window.location.href = '/';
       }, 500);
@@ -9691,7 +6089,7 @@
     window.addEventListener('load', async () => {
       syncSessionState();
 
-      // Verificar autenticación
+      // Verificar autenticaciÃ³n
       if (!TOKEN) {
         window.location.href = '/';
         return;
@@ -9741,7 +6139,7 @@
 
         await loadMyEnrollments();
 
-        // Restaurar última sección visitada
+        // Restaurar Ãºltima secciÃ³n visitada
         const lastSection = localStorage.getItem('last_section');
         const validSections = ['my-enrollments','horario','grades','buzones','my-profile','comunicaciones','reports'];
         if (lastSection && validSections.includes(lastSection)) {
@@ -9753,7 +6151,7 @@
       }
 
       if (USER_ROLE === 'docente') {
-        // Ocultar nav y sección de matriculaciones de estudiante
+        // Ocultar nav y secciÃ³n de matriculaciones de estudiante
         const navMyEnrollments = document.getElementById('nav-my-enrollments');
         const secMyEnrollments = document.getElementById('sec-my-enrollments');
         if (navMyEnrollments) navMyEnrollments.style.display = 'none';
@@ -9776,19 +6174,19 @@
         document.getElementById('sec-admin-users').style.display = 'none';
         document.getElementById('sec-config').style.display = 'none';
 
-        // Ocultar Calificaciones (gradebooks) para docente — el flujo de notas va por Buzones
+        // Ocultar Calificaciones (gradebooks) para docente â€” el flujo de notas va por Buzones
         const navGrades = document.getElementById('nav-grades');
         if (navGrades) navGrades.style.display = 'none';
         const secGrades = document.getElementById('sec-grades');
         if (secGrades) secGrades.style.display = 'none';
 
-        // Ocultar Pagos para docente — no aplica
+        // Ocultar Pagos para docente â€” no aplica
         const navPayment = document.getElementById('nav-payment');
         if (navPayment) navPayment.style.display = 'none';
         const secPayment = document.getElementById('sec-payment');
         if (secPayment) secPayment.style.display = 'none';
 
-        // Ocultar Reportes para docente — solo admin y estudiante
+        // Ocultar Reportes para docente â€” solo admin y estudiante
         const navReports = document.getElementById('nav-reports');
         if (navReports) navReports.style.display = 'none';
         const secReports = document.getElementById('sec-reports');
@@ -9801,7 +6199,7 @@
 
         await loadTeacherMisCursos();
 
-        // Restaurar última sección visitada
+        // Restaurar Ãºltima secciÃ³n visitada
         const lastSection = localStorage.getItem('last_section');
         const validSections = ['dashboard','mis-cursos','horario','buzones','my-profile','comunicaciones'];
         if (lastSection && validSections.includes(lastSection)) {
@@ -9884,9 +6282,9 @@
       }
     });
 
-    // ─── Horario Semanal ────────────────────────────────────────────────────────
+    // â”€â”€â”€ Horario Semanal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     const DAYS = ['lunes','martes','miercoles','jueves','viernes','sabado'];
-    const DAY_LABELS = { lunes:'Lunes', martes:'Martes', miercoles:'Miércoles', jueves:'Jueves', viernes:'Viernes', sabado:'Sábado' };
+    const DAY_LABELS = { lunes:'Lunes', martes:'Martes', miercoles:'MiÃ©rcoles', jueves:'Jueves', viernes:'Viernes', sabado:'SÃ¡bado' };
     const HOUR_START = 6;   // 6:00 AM
     const HOUR_END   = 22;  // 10:00 PM
     let ACTIVE_SCHEDULE_SESSIONS = [];
@@ -9918,13 +6316,13 @@
 
     function buildScheduleTooltip(session) {
       const lines = [
-        session.course_code ? `${session.course_code} — ${session.course_name}` : session.course_name,
-        `${DAY_LABELS[session.day_of_week] || session.day_of_week} · ${formatRange(session.start_time, session.end_time)}`,
+        session.course_code ? `${session.course_code} â€” ${session.course_name}` : session.course_name,
+        `${DAY_LABELS[session.day_of_week] || session.day_of_week} Â· ${formatRange(session.start_time, session.end_time)}`,
         `Aula: ${session.classroomLabel || 'Por definir'}`,
         `Docente: ${session.teacherLabel || 'Por asignar'}`,
       ];
-      if (session.sectionLabel && session.sectionLabel !== '—') lines.push(`Sección: ${session.sectionLabel}`);
-      if (session.durationLabel) lines.push(`Duración: ${session.durationLabel}`);
+      if (session.sectionLabel && session.sectionLabel !== 'â€”') lines.push(`SecciÃ³n: ${session.sectionLabel}`);
+      if (session.durationLabel) lines.push(`DuraciÃ³n: ${session.durationLabel}`);
       if (session.hasConflict) lines.push(`Conflicto: ${getScheduleConflictSummary(session)}`);
       return lines.join('\n');
     }
@@ -9970,14 +6368,14 @@
       const session = ACTIVE_SCHEDULE_SESSIONS.find(item => Number(item.id) === Number(sessionId));
       if (!session) return;
 
-      setText('schedule-detail-subtitle', `${DAY_LABELS[session.day_of_week] || session.day_of_week} · ${session.relativeTimeLabel}`);
-      setText('schedule-detail-code', session.course_code || '—');
-      setText('schedule-detail-name', session.course_name || '—');
-      setText('schedule-detail-time', session.relativeTimeLabel || '—');
-      setText('schedule-detail-room', session.classroomLabel || '—');
+      setText('schedule-detail-subtitle', `${DAY_LABELS[session.day_of_week] || session.day_of_week} Â· ${session.relativeTimeLabel}`);
+      setText('schedule-detail-code', session.course_code || 'â€”');
+      setText('schedule-detail-name', session.course_name || 'â€”');
+      setText('schedule-detail-time', session.relativeTimeLabel || 'â€”');
+      setText('schedule-detail-room', session.classroomLabel || 'â€”');
       setText('schedule-detail-teacher', session.teacherLabel || 'Por asignar');
-      setText('schedule-detail-duration', session.durationLabel || '—');
-      setText('schedule-detail-section', session.sectionLabel || '—');
+      setText('schedule-detail-duration', session.durationLabel || 'â€”');
+      setText('schedule-detail-section', session.sectionLabel || 'â€”');
       setText('schedule-detail-conflict', getScheduleConflictSummary(session));
 
       const annBtn = document.getElementById('schedule-detail-announcements-btn');
@@ -10021,7 +6419,7 @@
         const first = id === 'horario-career-filter'
           ? '<option value="">Todas las carreras</option>'
           : '<option value="">Selecciona carrera</option>';
-        sel.innerHTML = first + careers.map(c => `<option value="${c.id}">${c.code} — ${c.name}</option>`).join('');
+        sel.innerHTML = first + careers.map(c => `<option value="${c.id}">${c.code} â€” ${c.name}</option>`).join('');
       });
       // Si hay una carrera pre-seleccionada en el formulario de horario, cargar sus cursos
       const schCareer = document.getElementById('sch-career');
@@ -10032,7 +6430,7 @@
       const careerId = document.getElementById('sch-career').value;
       const sel = document.getElementById('sch-course');
       if (!careerId) {
-        sel.innerHTML = '<option value="">— Selecciona una carrera primero —</option>';
+        sel.innerHTML = '<option value="">â€” Selecciona una carrera primero â€”</option>';
         return;
       }
       sel.innerHTML = '<option value="">Cargando materias...</option>';
@@ -10045,10 +6443,10 @@
           sel.innerHTML = '<option value="">No hay materias para esta carrera</option>';
           return;
         }
-        sel.innerHTML = '<option value="">— Selecciona materia —</option>' +
-          courses.map(c => `<option value="${c.id}">${c.code} — ${c.name}</option>`).join('');
+        sel.innerHTML = '<option value="">â€” Selecciona materia â€”</option>' +
+          courses.map(c => `<option value="${c.id}">${c.code} â€” ${c.name}</option>`).join('');
       } catch (e) {
-        sel.innerHTML = '<option value="">Error de conexión</option>';
+        sel.innerHTML = '<option value="">Error de conexiÃ³n</option>';
       } finally {
         sel.disabled = false;
       }
@@ -10092,7 +6490,7 @@
           <option value="${t.id}">${t.name || `${t.first_name || ''} ${t.last_name || ''}`.trim() || t.email}</option>
         `).join('');
       } catch (error) {
-        schTeacher.innerHTML = '<option value="">Error de conexión</option>';
+        schTeacher.innerHTML = '<option value="">Error de conexiÃ³n</option>';
       }
     }
 
@@ -10121,7 +6519,7 @@
     async function loadPersonalSchedule() {
       const container = document.getElementById('personal-timetable-container');
       if (!container) return;
-      container.innerHTML = '<div class="empty-state"><div class="big">◌</div>Cargando...</div>';
+      container.innerHTML = '<div class="empty-state"><div class="big">â—Œ</div>Cargando...</div>';
 
       try {
         let courses = [];
@@ -10134,13 +6532,13 @@
         }
 
         if (!courses.length) {
-          container.innerHTML = '<div class="empty-state"><div class="big">📅</div>No tienes cursos asignados este período.</div>';
+          container.innerHTML = '<div class="empty-state"><div class="big">ðŸ“…</div>No tienes cursos asignados este perÃ­odo.</div>';
           return;
         }
 
         // Mapear cursos a formato de sesiones y filtrar los que tienen horario
         const sessionPromises = courses.map(async (c, i) => {
-          const day = (c.day_of_week || '').toLowerCase().replace('é','e').replace('á','a').replace('ó','o');
+          const day = (c.day_of_week || '').toLowerCase().replace('Ã©','e').replace('Ã¡','a').replace('Ã³','o');
           if (!day || day === 'por definir') return null;
           const teachers = USER_ROLE === 'estudiante' ? await fetchCourseTeachers(c.id) : [];
           const teacherLabel = teachers.length > 0
@@ -10157,33 +6555,33 @@
             day_of_week: day,
             start_time: c.start_time || '00:00',
             end_time: c.end_time || '00:00',
-            classroom: c.location || c.schedule || '—',
+            classroom: c.location || c.schedule || 'â€”',
             classroomLabel: c.location || 'Por definir',
             section: c.section || null,
-            sectionLabel: c.section || '—',
+            sectionLabel: c.section || 'â€”',
             modality: null,
             _colorIdx: i % COURSE_COLORS.length,
             teacherLabel,
             startMinutes,
             endMinutes,
             durationMinutes,
-            durationLabel: durationMinutes > 0 ? `${Math.round(durationMinutes / 60 * 10) / 10} h` : '—',
+            durationLabel: durationMinutes > 0 ? `${Math.round(durationMinutes / 60 * 10) / 10} h` : 'â€”',
             relativeTimeLabel: c.end_time && c.end_time !== '00:00' ? formatRange(c.start_time, c.end_time) : formatTime(c.start_time),
             shortName: getScheduleCourseShortName(c.name, c.code),
           };
         });
         const sessions = (await Promise.all(sessionPromises)).filter(Boolean);
 
-        // También incluir sessions del endpoint si las hay
+        // TambiÃ©n incluir sessions del endpoint si las hay
         if (!sessions.length) {
-          container.innerHTML = '<div class="empty-state"><div class="big">📅</div>Tus cursos no tienen horario registrado aún.</div>';
+          container.innerHTML = '<div class="empty-state"><div class="big">ðŸ“…</div>Tus cursos no tienen horario registrado aÃºn.</div>';
           return;
         }
 
         ACTIVE_SCHEDULE_SESSIONS = markScheduleConflicts(sessions);
         renderPersonalTimetable(ACTIVE_SCHEDULE_SESSIONS, container);
       } catch(e) {
-        container.innerHTML = `<div class="empty-state"><div class="big">⚠</div>${e.message}</div>`;
+        container.innerHTML = `<div class="empty-state"><div class="big">âš </div>${e.message}</div>`;
       }
     }
 
@@ -10200,10 +6598,10 @@
       minH = Math.max(minH - 1, 0);
       maxH = Math.min(maxH + 1, 24);
 
-      // Detectar días que tienen clases
+      // Detectar dÃ­as que tienen clases
       const activeDays = DAYS.filter(d => sessions.some(s => s.day_of_week === d));
       if (!activeDays.length) {
-        container.innerHTML = '<div class="empty-state"><div class="big">📅</div>Sin clases programadas.</div>';
+        container.innerHTML = '<div class="empty-state"><div class="big">ðŸ“…</div>Sin clases programadas.</div>';
         return;
       }
 
@@ -10237,7 +6635,7 @@
                 ${s.hasConflict ? '<span class="tt-conflict-flag">Conflicto</span>' : ''}
                 ${s.course_code ? `<span class="tt-code">${escapeHtml(s.course_code)}</span>` : ''}
                 <strong>${escapeHtml(s.shortName)}</strong>
-                <span class="tt-meta">${escapeHtml(label)} · ${escapeHtml(s.classroomLabel || 'Por definir')}</span>
+                <span class="tt-meta">${escapeHtml(label)} Â· ${escapeHtml(s.classroomLabel || 'Por definir')}</span>
                 <span class="tt-meta-secondary">${escapeHtml(s.teacherLabel || 'Sin docente asignado')}</span>
               </div>`;
             });
@@ -10252,12 +6650,12 @@
 
     function renderTimetable(sessions, container) {
       if (!sessions.length) {
-        container.innerHTML = '<div class="empty-state"><div class="big">📅</div>No hay bloques de clase registrados aún.</div>';
+        container.innerHTML = '<div class="empty-state"><div class="big">ðŸ“…</div>No hay bloques de clase registrados aÃºn.</div>';
         return;
       }
 
-      // Agrupar sesiones por día y hora base (hora entera)
-      // Para cada celda (día, hora) puede haber múltiples bloques que empiezan en ese rango
+      // Agrupar sesiones por dÃ­a y hora base (hora entera)
+      // Para cada celda (dÃ­a, hora) puede haber mÃºltiples bloques que empiezan en ese rango
       const PX_PER_MIN = 48 / 60; // 48px de alto por hora
 
       let html = '<table class="timetable"><thead><tr><th>Hora</th>';
@@ -10283,13 +6681,13 @@
               const em = timeToMinutes(s.end_time);
               const duration = em && sm ? em - sm : 60;
               const heightPx = Math.max(duration * PX_PER_MIN, 28);
-              html += `<div class="tt-block" style="height:${heightPx}px;" title="${s.course_name || ''} — ${s.classroom}">
-                <button class="tt-del" onclick="deleteScheduleBlock(${s.id})" title="Eliminar">✕</button>
+              html += `<div class="tt-block" style="height:${heightPx}px;" title="${s.course_name || ''} â€” ${s.classroom}">
+                <button class="tt-del" onclick="deleteScheduleBlock(${s.id})" title="Eliminar">âœ•</button>
                 <strong>${s.course_code || 'N/A'}</strong>
                 <span class="tt-sub">${formatRange(s.start_time, s.end_time)}</span>
                 <span class="tt-sub">${s.modality || ''}</span>
                 <span class="tt-sub">${s.classroom}</span>
-                ${s.teacher_name ? `<span class="tt-sub">👤 ${s.teacher_name}</span>` : ''}
+                ${s.teacher_name ? `<span class="tt-sub">ðŸ‘¤ ${s.teacher_name}</span>` : ''}
               </div>`;
             });
             html += '</td>';
@@ -10303,7 +6701,7 @@
 
     async function createScheduleBlock() {
       if (USER_ROLE !== 'admin') {
-        showToast('Debes iniciar sesión como admin para crear horarios.', 'err');
+        showToast('Debes iniciar sesiÃ³n como admin para crear horarios.', 'err');
         return;
       }
 
@@ -10350,179 +6748,4 @@
       showToast('Bloque eliminado.', 'ok');
       loadSchedule();
     }
-  </script>
-
-  <!-- ═══ CALENDAR PICKER ═══ -->
-  <div id="cal-picker-overlay" onclick="closeCalPicker(event)" style="display:none;position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;">
-    <div id="cal-picker-box" onclick="event.stopPropagation()" style="
-      background:#1e1e2e;border:1px solid #444;border-radius:14px;
-      padding:16px 18px 14px;width:300px;box-shadow:0 8px 32px rgba(0,0,0,.7);
-      color:#e0e0e0;font-family:inherit;user-select:none;">
-      <!-- header: día seleccionado -->
-      <div id="cal-header-day" style="font-size:.8rem;color:#aaa;margin-bottom:6px;text-transform:capitalize;"></div>
-      <!-- nav mes/año -->
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-        <button onclick="calNavMonth(-1)" style="background:none;border:none;color:#e0e0e0;font-size:1.1rem;cursor:pointer;">&#9650;</button>
-        <span id="cal-month-label" style="font-weight:600;font-size:.95rem;"></span>
-        <button onclick="calNavMonth(1)" style="background:none;border:none;color:#e0e0e0;font-size:1.1rem;cursor:pointer;">&#9660;</button>
-      </div>
-      <!-- días de semana -->
-      <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:4px;">
-        <div style="text-align:center;font-size:.7rem;color:#888;font-weight:600;">DO</div>
-        <div style="text-align:center;font-size:.7rem;color:#888;font-weight:600;">LU</div>
-        <div style="text-align:center;font-size:.7rem;color:#888;font-weight:600;">MA</div>
-        <div style="text-align:center;font-size:.7rem;color:#888;font-weight:600;">MI</div>
-        <div style="text-align:center;font-size:.7rem;color:#888;font-weight:600;">JU</div>
-        <div style="text-align:center;font-size:.7rem;color:#888;font-weight:600;">VI</div>
-        <div style="text-align:center;font-size:.7rem;color:#888;font-weight:600;">SA</div>
-      </div>
-      <!-- grid de días -->
-      <div id="cal-days-grid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;"></div>
-      <!-- selector de hora -->
-      <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-top:14px;border-top:1px solid #333;padding-top:12px;">
-        <div style="display:flex;flex-direction:column;align-items:center;gap:4px;">
-          <button onclick="calChangeHour(1)" style="background:none;border:none;color:#aaa;font-size:.85rem;cursor:pointer;">&#9650;</button>
-          <span id="cal-hour-display" style="font-size:1.3rem;font-weight:700;min-width:32px;text-align:center;">12</span>
-          <button onclick="calChangeHour(-1)" style="background:none;border:none;color:#aaa;font-size:.85rem;cursor:pointer;">&#9660;</button>
-        </div>
-        <span style="font-size:1.4rem;font-weight:700;color:#aaa;">:</span>
-        <div style="display:flex;flex-direction:column;align-items:center;gap:4px;">
-          <button onclick="calChangeMin(5)" style="background:none;border:none;color:#aaa;font-size:.85rem;cursor:pointer;">&#9650;</button>
-          <span id="cal-min-display" style="font-size:1.3rem;font-weight:700;min-width:32px;text-align:center;">00</span>
-          <button onclick="calChangeMin(-5)" style="background:none;border:none;color:#aaa;font-size:.85rem;cursor:pointer;">&#9660;</button>
-        </div>
-      </div>
-      <!-- botón confirmar -->
-      <button onclick="calConfirm()" style="
-        margin-top:12px;width:100%;background:#00c06b;color:#111;border:none;
-        border-radius:8px;padding:8px 0;font-weight:700;font-size:.9rem;cursor:pointer;">
-        ✓ Confirmar
-      </button>
-    </div>
-  </div>
-
-  <style>
-    .cal-day-btn {
-      background: none; border: none; color: #ccc; cursor: pointer;
-      border-radius: 50%; width: 34px; height: 34px; font-size: .82rem;
-      display: flex; align-items: center; justify-content: center; margin: auto;
-      transition: background .15s;
-    }
-    .cal-day-btn:hover { background: #333; }
-    .cal-day-btn.today { border: 1px solid #00c06b; color: #00c06b; }
-    .cal-day-btn.selected { background: #00c06b !important; color: #111 !important; font-weight: 700; }
-    .cal-day-btn.other-month { color: #555; }
-  </style>
-
-  <script>
-    // ═══ CALENDAR PICKER LOGIC ═══
-    let _calTargetId = null;
-    let _calYear = 0, _calMonth = 0, _calDay = 0, _calHour = 23, _calMin = 59;
-    const _CAL_MONTHS = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
-    const _CAL_DAYS_ES = ['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
-
-    function openCalPicker(targetInputId) {
-      _calTargetId = targetInputId;
-      const existing = document.getElementById(targetInputId).value;
-      const now = new Date();
-      let d = existing ? new Date(existing) : now;
-      _calYear = d.getFullYear(); _calMonth = d.getMonth();
-      _calDay = existing ? d.getDate() : 0;
-      _calHour = existing ? d.getHours() : 23;
-      _calMin = existing ? d.getMinutes() : 59;
-
-      const overlay = document.getElementById('cal-picker-overlay');
-      overlay.style.display = 'flex';
-      _renderCal();
-    }
-
-    function closeCalPicker(e) {
-      document.getElementById('cal-picker-overlay').style.display = 'none';
-    }
-
-    function clearCalPicker(targetInputId) {
-      document.getElementById(targetInputId).value = '';
-      const btn = document.getElementById(targetInputId + '-btn');
-      if (btn) btn.textContent = '📅 Seleccionar fecha y hora';
-      const clr = document.getElementById(targetInputId + '-clear');
-      if (clr) clr.style.display = 'none';
-    }
-
-    function calNavMonth(dir) {
-      _calMonth += dir;
-      if (_calMonth > 11) { _calMonth = 0; _calYear++; }
-      if (_calMonth < 0) { _calMonth = 11; _calYear--; }
-      _renderCal();
-    }
-
-    function calSelectDay(day) {
-      _calDay = day;
-      _renderCal();
-    }
-
-    function calChangeHour(d) {
-      _calHour = (_calHour + d + 24) % 24;
-      document.getElementById('cal-hour-display').textContent = String(_calHour).padStart(2,'0');
-    }
-
-    function calChangeMin(d) {
-      _calMin = (_calMin + d + 60) % 60;
-      document.getElementById('cal-min-display').textContent = String(_calMin).padStart(2,'0');
-    }
-
-    function calConfirm() {
-      if (!_calDay) { showToast('Selecciona un día', 'err'); return; }
-      const dt = new Date(_calYear, _calMonth, _calDay, _calHour, _calMin, 0);
-      document.getElementById(_calTargetId).value = dt.toISOString();
-
-      const label = dt.toLocaleString('es-CO', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' });
-      const btn = document.getElementById(_calTargetId + '-btn');
-      if (btn) btn.textContent = '📅 ' + label;
-      const clr = document.getElementById(_calTargetId + '-clear');
-      if (clr) clr.style.display = '';
-
-      document.getElementById('cal-picker-overlay').style.display = 'none';
-    }
-
-    function _renderCal() {
-      const today = new Date();
-      const mesLabel = _CAL_MONTHS[_calMonth];
-      document.getElementById('cal-month-label').textContent = mesLabel.charAt(0).toUpperCase() + mesLabel.slice(1) + ' de ' + _calYear;
-      document.getElementById('cal-hour-display').textContent = String(_calHour).padStart(2,'0');
-      document.getElementById('cal-min-display').textContent = String(_calMin).padStart(2,'0');
-
-      if (_calDay) {
-        const sd = new Date(_calYear, _calMonth, _calDay);
-        document.getElementById('cal-header-day').textContent =
-          _CAL_DAYS_ES[sd.getDay()] + ', ' + _calDay + ' de ' + _CAL_MONTHS[_calMonth];
-      } else {
-        document.getElementById('cal-header-day').textContent = 'Selecciona un día';
-      }
-
-      const firstDay = new Date(_calYear, _calMonth, 1).getDay(); // 0=domingo
-      const daysInMonth = new Date(_calYear, _calMonth + 1, 0).getDate();
-      const daysInPrev = new Date(_calYear, _calMonth, 0).getDate();
-
-      let html = '';
-      // Días del mes anterior
-      for (let i = firstDay - 1; i >= 0; i--) {
-        html += `<button class="cal-day-btn other-month" onclick="calNavMonth(-1);calSelectDay(${daysInPrev - i})">${daysInPrev - i}</button>`;
-      }
-      // Días del mes actual
-      for (let d = 1; d <= daysInMonth; d++) {
-        let cls = 'cal-day-btn';
-        if (d === today.getDate() && _calMonth === today.getMonth() && _calYear === today.getFullYear()) cls += ' today';
-        if (d === _calDay) cls += ' selected';
-        html += `<button class="${cls}" onclick="calSelectDay(${d})">${d}</button>`;
-      }
-      // Completar última fila
-      const filled = firstDay + daysInMonth;
-      const remaining = (7 - (filled % 7)) % 7;
-      for (let d = 1; d <= remaining; d++) {
-        html += `<button class="cal-day-btn other-month" onclick="calNavMonth(1);calSelectDay(${d})">${d}</button>`;
-      }
-      document.getElementById('cal-days-grid').innerHTML = html;
-    }
-  </script>
-</body>
-</html>
+  
