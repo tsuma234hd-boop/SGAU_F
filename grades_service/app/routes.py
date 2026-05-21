@@ -1,4 +1,5 @@
 import base64
+import os
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Response, UploadFile
 from sqlalchemy.orm import Session
@@ -14,7 +15,7 @@ from app.auth import (
     resolve_teacher_id,
 )
 
-ENROLLMENT_SERVICE_URL = "http://enrollment_service:8000"
+ENROLLMENT_SERVICE_URL = os.getenv("ENROLLMENT_SERVICE_URL", "http://enrollment_service:8000")
 
 router = APIRouter()
 

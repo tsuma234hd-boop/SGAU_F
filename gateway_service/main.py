@@ -29,13 +29,13 @@ current_dir = os.path.dirname(os.path.abspath(__file__))
 app.mount("/static", StaticFiles(directory=current_dir), name="static")
 
 # ─── URLs internas de microservicios (Docker) ─────────────────────────────────
-AUTH_SERVICE_URL      = "http://auth-service:8000"
-STUDENT_SERVICE_URL   = "http://student_service:8000"
-ACADEMIC_SERVICE_URL  = "http://academic_service:8000"
-ENROLLMENT_SERVICE_URL = "http://enrollment_service:8000"
-GRADES_SERVICE_URL = "http://grades_service:8000"
-PAYMENT_SERVICE_URL = "http://payment_service:8000"
-REPORTING_SERVICE_URL = "http://reporting_service:8001"
+AUTH_SERVICE_URL = os.getenv("AUTH_SERVICE_URL", "http://auth-service:8000")
+STUDENT_SERVICE_URL = os.getenv("STUDENT_SERVICE_URL", "http://student_service:8000")
+ACADEMIC_SERVICE_URL = os.getenv("ACADEMIC_SERVICE_URL", "http://academic_service:8000")
+ENROLLMENT_SERVICE_URL = os.getenv("ENROLLMENT_SERVICE_URL", "http://enrollment_service:8000")
+GRADES_SERVICE_URL = os.getenv("GRADES_SERVICE_URL", "http://grades_service:8000")
+PAYMENT_SERVICE_URL = os.getenv("PAYMENT_SERVICE_URL", "http://payment_service:8000")
+REPORTING_SERVICE_URL = os.getenv("REPORTING_SERVICE_URL", "http://reporting_service:8001")
 
 TIMEOUT = 10.0  # segundos
 

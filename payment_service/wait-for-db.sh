@@ -2,7 +2,7 @@
 
 echo "Esperando a la base de datos de payment..."
 
-until python -c "import socket; s=socket.socket(); s.connect(('payment-db',5432))"; do
+until python -c "import os, socket; from urllib.parse import urlparse; u = urlparse(os.getenv('DATABASE_URL', 'postgresql://postgres:postgres@payment-db:5432/paymentdb')); socket.create_connection((u.hostname or 'payment-db', int(u.port or 5432)), timeout=3).close()"; do
   sleep 2
 done
 

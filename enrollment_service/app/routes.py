@@ -1,4 +1,5 @@
 from datetime import datetime
+import os
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 import requests
@@ -8,7 +9,7 @@ from .database import SessionLocal
 from .auth import require_roles, resolve_student_id
 
 router = APIRouter(prefix="/enrollments", tags=["Enrollments"])
-ACADEMIC_SERVICE_URL = "http://academic_service:8000"
+ACADEMIC_SERVICE_URL = os.getenv("ACADEMIC_SERVICE_URL", "http://academic_service:8000")
 CURRENT_ENROLLMENT_STATUSES = {"activa", "active", "pendiente"}
 
 

@@ -1,0 +1,180 @@
+databases:
+  - name: auth-db
+    databaseName: authdb
+  - name: student-db
+    databaseName: studentdb
+  - name: academic-db
+    databaseName: academicdb
+  - name: enrollment-db
+    databaseName: enrollmentdb
+  - name: grades-db
+    databaseName: gradesdb
+  - name: payment-db
+    databaseName: paymentdb
+
+services:
+  - type: web
+    name: auth-service
+    runtime: docker
+    dockerContext: ./auth-service
+    dockerfilePath: ./auth-service/Dockerfile
+    healthCheckPath: /health
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: auth-db
+          property: connectionString
+      - key: AUTH_SECRET_KEY
+        value: CHANGE_ME_SECRET_KEY
+
+  - type: web
+    name: student-service
+    runtime: docker
+    dockerContext: ./student_service
+    dockerfilePath: ./student_service/Dockerfile
+    healthCheckPath: /health
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: student-db
+          property: connectionString
+      - key: AUTH_SECRET_KEY
+        value: CHANGE_ME_SECRET_KEY
+
+  - type: web
+    name: academic-service
+    runtime: docker
+    dockerContext: ./academic_offer_service
+    dockerfilePath: ./academic_offer_service/Dockerfile
+    healthCheckPath: /health
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: academic-db
+          property: connectionString
+      - key: AUTH_SECRET_KEY
+        value: CHANGE_ME_SECRET_KEY
+
+  - type: web
+    name: enrollment-service
+    runtime: docker
+    dockerContext: ./enrollment_service
+    dockerfilePath: ./enrollment_service/Dockerfile
+    healthCheckPath: /health
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: enrollment-db
+          property: connectionString
+      - key: AUTH_SECRET_KEY
+        value: CHANGE_ME_SECRET_KEY
+      - key: SEMESTER_START_DATE
+        value: "2026-02-02"
+      - key: ENROLLMENT_GRACE_DAYS
+        value: "14"
+      - key: STUDENT_SERVICE_URL
+        value: http://student-service:8000
+      - key: ACADEMIC_SERVICE_URL
+        value: http://academic-service:8000
+      - key: GRADES_SERVICE_URL
+        value: http://grades-service:8000
+
+  - type: web
+    name: grades-service
+    runtime: docker
+    dockerContext: ./grades_service
+    dockerfilePath: ./grades_service/Dockerfile
+    healthCheckPath: /health
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: grades-db
+          property: connectionString
+      - key: AUTH_SECRET_KEY
+        value: CHANGE_ME_SECRET_KEY
+      - key: STUDENT_SERVICE_URL
+        value: http://student-service:8000
+      - key: ACADEMIC_SERVICE_URL
+        value: http://academic-service:8000
+      - key: ENROLLMENT_SERVICE_URL
+        value: http://enrollment-service:8000
+
+  - type: web
+    name: payment-service
+    runtime: docker
+    dockerContext: ./payment_service
+    dockerfilePath: ./payment_service/Dockerfile
+    healthCheckPath: /health
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: payment-db
+          property: connectionString
+      - key: AUTH_SECRET_KEY
+        value: CHANGE_ME_SECRET_KEY
+      - key: JWT_ALGORITHM
+        value: HS256
+      - key: STUDENT_SERVICE_URL
+        value: http://student-service:8000
+      - key: WOMPI_ENV
+        value: sandbox
+      - key: WOMPI_BASE_URL
+        value: https://sandbox.wompi.co/v1
+      - key: WOMPI_PUBLIC_KEY
+        sync: false
+      - key: WOMPI_PRIVATE_KEY
+        sync: false
+      - key: WOMPI_EVENTS_SECRET
+        sync: false
+      - key: WOMPI_INTEGRITY_SECRET
+        sync: false
+      - key: PAYMENT_LINK_REDIRECT_URL
+        value: https://gateway-service.onrender.com/dashboard
+      - key: PAYMENT_EXPIRATION_MINUTES
+        value: "30"
+      - key: WOMPI_WEBHOOK_TOLERANCE_SECONDS
+        value: "600"
+      - key: HTTP_TIMEOUT_SECONDS
+        value: "15"
+      - key: LOG_LEVEL
+        value: INFO
+
+  - type: web
+    name: reporting-service
+    runtime: docker
+    dockerContext: ./reporting_service
+    dockerfilePath: ./reporting_service/Dockerfile
+    healthCheckPath: /health
+    envVars:
+      - key: AUTH_SECRET_KEY
+        value: CHANGE_ME_SECRET_KEY
+      - key: GRADES_SERVICE_URL
+        value: http://grades-service:8000
+      - key: STUDENT_SERVICE_URL
+        value: http://student-service:8000
+      - key: COURSES_SERVICE_URL
+        value: http://academic-service:8000
+      - key: PAYMENT_SERVICE_URL
+        value: http://payment-service:8000
+
+  - type: web
+    name: gateway-service
+    runtime: docker
+    dockerContext: ./gateway_service
+    dockerfilePath: ./gateway_service/Dockerfile
+    healthCheckPath: /health
+    envVars:
+      - key: AUTH_SERVICE_URL
+        value: http://auth-service:8000
+      - key: STUDENT_SERVICE_URL
+        value: http://student-service:8000
+      - key: ACADEMIC_SERVICE_URL
+        value: http://academic-service:8000
+      - key: ENROLLMENT_SERVICE_URL
+        value: http://enrollment-service:8000
+      - key: GRADES_SERVICE_URL
+        value: http://grades-service:8000
+      - key: PAYMENT_SERVICE_URL
+        value: http://payment-service:8000
+      - key: REPORTING_SERVICE_URL
+        value: http://reporting-service:8001
